@@ -72,7 +72,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [isUserLoading, user]);
 
-  const isInitialized = !isUserLoading && !isProfileLoading && !isCustomFoodsLoading && !isWeightHistoryLoading && !isLoggedFoodsLoading;
+  const isInitialized = !isUserLoading;
 
   const calorieInfo = useMemo(() => {
     if (profile) {
