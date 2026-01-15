@@ -19,17 +19,15 @@ import {
   SidebarMenuButton,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import Header from './Header';
+import Header from '@/components/layout/Header';
 import { AppContext } from '@/context/AppContext';
-import BottomNavBar from './BottomNavBar';
+import BottomNavBar from '@/components/layout/BottomNavBar';
 
 function MobileHeader() {
   const pathname = usePathname();
 
   const getPageTitle = (pathname: string) => {
     switch (pathname) {
-        case '/':
-            return 'Welcome';
         case '/dashboard':
             return 'Dashboard';
         case '/profile':
@@ -58,8 +56,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
-    // Only redirect if initialization is complete, there is no profile, AND we are not on the welcome or profile page.
-    if (isInitialized && !profile && pathname !== '/' && pathname !== '/profile') {
+    // Only redirect if initialization is complete, there is no profile, AND we are not on the profile page.
+    if (isInitialized && !profile && pathname !== '/profile') {
         router.replace('/profile');
     }
   }, [isInitialized, profile, pathname, router]);
@@ -77,11 +75,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <UtensilsCrossed className="h-12 w-12 animate-pulse text-primary"/>
     </div>;
   }
-  
-  if (pathname === '/') {
-    return <main className="flex-1">{children}</main>
-  }
-  
 
   return (
     <SidebarProvider>
