@@ -1,7 +1,7 @@
 /**
  * @title Firebase Security Rules for Ceylanta Calories App
  * @author AI Architect
- * @version 1.0
+ * @version 1.1
  *
  * @description
  * This ruleset enforces a strict, user-centric security model for the Ceylanta
@@ -137,11 +137,7 @@ service cloud.firestore {
        * @principle Enforces document ownership and relational integrity for subcollections.
        */
       match /foodEntries/{foodEntryId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidFoodEntryDataForCreate(userId);
-        allow update: if isExistingOwner(userId) && hasValidFoodEntryDataForUpdate();
-        allow delete: if isExistingOwner(userId);
+        allow read, write: if isOwner(userId);
       }
 
       /**
@@ -153,11 +149,27 @@ service cloud.firestore {
        * @principle Enforces document ownership and relational integrity for subcollections.
        */
       match /dailySummaries/{dailySummaryId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidDailySummaryDataForCreate(userId);
-        allow update: if isExistingOwner(userId) && hasValidDailySummaryDataForUpdate();
-        allow delete: if isExistingOwner(userId);
+        allow read, write: if isOwner(userId);
+      }
+
+      /**
+       * @description Rules for a user's private collection of custom foods.
+       * @path /users/{userId}/customFoods/{customFoodId}
+       * @allow (read, write) The owner can perform all operations on their own custom foods.
+       * @principle Enforces document ownership for subcollections.
+       */
+      match /customFoods/{customFoodId} {
+          allow read, write: if isOwner(userId);
+      }
+
+      /**
+       * @description Rules for a user's private collection of weight history.
+       * @path /users/{userId}/weightHistory/{weightEntryId}
+       * @allow (read, write) The owner can perform all operations on their own weight history.
+       * @principle Enforces document ownership for subcollections.
+       */
+      match /weightHistory/{weightEntryId} {
+          allow read, write: if isOwner(userId);
       }
     }
   }

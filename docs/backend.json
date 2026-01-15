@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -135,6 +136,56 @@
         "caloriesConsumed",
         "caloriesRemaining"
       ]
+    },
+    "CustomFood": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CustomFood",
+      "type": "object",
+      "description": "Represents a food item manually entered by the user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the custom food."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the food."
+        },
+        "calories": {
+          "type": "number"
+        },
+        "protein": {
+          "type": "number"
+        },
+        "carbs": {
+          "type": "number"
+        },
+        "fat": {
+          "type": "number"
+        },
+        "isCustom": {
+            "type": "boolean"
+        }
+      },
+      "required": ["name", "calories", "isCustom"]
+    },
+    "WeightEntry": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "WeightEntry",
+        "type": "object",
+        "description": "A single weight measurement for a user on a specific date.",
+        "properties": {
+            "date": {
+                "type": "string",
+                "format": "date",
+                "description": "The date of the weight entry in YYYY-MM-DD format."
+            },
+            "weight": {
+                "type": "number",
+                "description": "The user's weight in kilograms."
+            }
+        },
+        "required": ["date", "weight"]
     }
   },
   "auth": {
@@ -152,13 +203,7 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profile information.  The `userId` is used for path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
+          "description": "Stores user profile information. The `userId` is used for path-based ownership."
         }
       },
       {
@@ -168,17 +213,7 @@
           "schema": {
             "$ref": "#/backend/entities/FoodEntry"
           },
-          "description": "Stores individual food entries for a user.  The `userId` is used for path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "foodEntryId",
-              "description": "The unique identifier for the food entry."
-            }
-          ]
+          "description": "Stores individual food entries for a user."
         }
       },
       {
@@ -188,20 +223,29 @@
           "schema": {
             "$ref": "#/backend/entities/DailySummary"
           },
-          "description": "Stores daily summaries of calorie intake for a user. The `userId` is used for path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "dailySummaryId",
-              "description": "The unique identifier for the daily summary."
-            }
-          ]
+          "description": "Stores daily summaries of calorie intake for a user."
         }
+      },
+      {
+        "path": "/users/{userId}/customFoods/{customFoodId}",
+        "definition": {
+          "entityName": "CustomFood",
+          "schema": {
+            "$ref": "#/backend/entities/CustomFood"
+          },
+          "description": "Stores custom food items created by a user."
+        }
+      },
+      {
+          "path": "/users/{userId}/weightHistory/{weightEntryId}",
+          "definition": {
+            "entityName": "WeightEntry",
+            "schema": {
+                "$ref": "#/backend/entities/WeightEntry"
+            },
+            "description": "Stores a user's weight history. The document ID is the date (YYYY-MM-DD)."
+          }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to optimize for security, scalability, and ease of querying, following the principles of Authorization Independence, Structural Segregation, and Access Modeling. User profiles, food entries, and daily summaries are stored in separate collections under the `/users/{userId}` path, ensuring clear ownership and easy management of user-specific data. This structure leverages path-based authorization for private data, eliminating the need for complex `get()` calls in security rules and enabling atomic operations. Specifically, food entries and daily summaries are stored as subcollections to their respective user profiles, maintaining a clear hierarchical relationship and simplifying data retrieval for a specific user.\n\n*   **Authorization Independence:** The design avoids hierarchical authorization dependencies by using path-based ownership. Each user's data (profile, food entries, and daily summaries) resides under their unique `userId`, removing the need to fetch parent document data for authorization. This also supports atomic operations.\n*   **Structural Segregation:** The separation of user-specific data into subcollections under the `/users/{userId}` path ensures that each collection has a homogeneous security posture. Access to food entries and daily summaries is restricted to the owner (`userId`) of the profile.\n*   **QAPs (Rules are not Filters):** This structure enables secure `list` operations because the data is segregated by user. A rule can easily allow a user to list only their own food entries or daily summaries without needing to filter based on content."
+    ]
   }
 }
