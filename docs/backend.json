@@ -1,0 +1,207 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile, containing personal information and settings for the Ceylanta Calories app.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name."
+        },
+        "age": {
+          "type": "number",
+          "description": "User's age in years."
+        },
+        "gender": {
+          "type": "string",
+          "description": "User's gender (e.g., male, female, other)."
+        },
+        "height": {
+          "type": "number",
+          "description": "User's height in centimeters."
+        },
+        "weight": {
+          "type": "number",
+          "description": "User's weight in kilograms."
+        },
+        "activityLevel": {
+          "type": "string",
+          "description": "User's activity level (e.g., low, medium, high)."
+        },
+        "goal": {
+          "type": "string",
+          "description": "User's fitness goal (e.g., lose weight, maintain, gain weight)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "age",
+        "gender",
+        "height",
+        "weight",
+        "activityLevel",
+        "goal"
+      ]
+    },
+    "FoodEntry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FoodEntry",
+      "type": "object",
+      "description": "Represents a single food item logged by the user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the food entry."
+        },
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N FoodEntry)"
+        },
+        "foodName": {
+          "type": "string",
+          "description": "Name of the food item."
+        },
+        "calories": {
+          "type": "number",
+          "description": "Number of calories in the food item."
+        },
+        "portionSize": {
+          "type": "string",
+          "description": "The amount of food consumed (e.g., 1 cup, 1 slice)."
+        },
+        "mealType": {
+          "type": "string",
+          "description": "The meal type (e.g., breakfast, lunch, dinner)."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date when the food was consumed.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userProfileId",
+        "foodName",
+        "calories",
+        "portionSize",
+        "mealType",
+        "date"
+      ]
+    },
+    "DailySummary": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DailySummary",
+      "type": "object",
+      "description": "Represents a summary of the user's daily calorie intake and progress.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the daily summary."
+        },
+        "userProfileId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N DailySummary)"
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of the summary.",
+          "format": "date-time"
+        },
+        "caloriesConsumed": {
+          "type": "number",
+          "description": "Total calories consumed on the day."
+        },
+        "caloriesRemaining": {
+          "type": "number",
+          "description": "Remaining calories for the day based on the user's goal."
+        },
+        "burnedCalories": {
+          "type": "number",
+          "description": "Calories burned through exercise or activity."
+        }
+      },
+      "required": [
+        "id",
+        "userProfileId",
+        "date",
+        "caloriesConsumed",
+        "caloriesRemaining"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information.  The `userId` is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/foodEntries/{foodEntryId}",
+        "definition": {
+          "entityName": "FoodEntry",
+          "schema": {
+            "$ref": "#/backend/entities/FoodEntry"
+          },
+          "description": "Stores individual food entries for a user.  The `userId` is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "foodEntryId",
+              "description": "The unique identifier for the food entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/dailySummaries/{dailySummaryId}",
+        "definition": {
+          "entityName": "DailySummary",
+          "schema": {
+            "$ref": "#/backend/entities/DailySummary"
+          },
+          "description": "Stores daily summaries of calorie intake for a user. The `userId` is used for path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "dailySummaryId",
+              "description": "The unique identifier for the daily summary."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to optimize for security, scalability, and ease of querying, following the principles of Authorization Independence, Structural Segregation, and Access Modeling. User profiles, food entries, and daily summaries are stored in separate collections under the `/users/{userId}` path, ensuring clear ownership and easy management of user-specific data. This structure leverages path-based authorization for private data, eliminating the need for complex `get()` calls in security rules and enabling atomic operations. Specifically, food entries and daily summaries are stored as subcollections to their respective user profiles, maintaining a clear hierarchical relationship and simplifying data retrieval for a specific user.\n\n*   **Authorization Independence:** The design avoids hierarchical authorization dependencies by using path-based ownership. Each user's data (profile, food entries, and daily summaries) resides under their unique `userId`, removing the need to fetch parent document data for authorization. This also supports atomic operations.\n*   **Structural Segregation:** The separation of user-specific data into subcollections under the `/users/{userId}` path ensures that each collection has a homogeneous security posture. Access to food entries and daily summaries is restricted to the owner (`userId`) of the profile.\n*   **QAPs (Rules are not Filters):** This structure enables secure `list` operations because the data is segregated by user. A rule can easily allow a user to list only their own food entries or daily summaries without needing to filter based on content."
+  }
+}

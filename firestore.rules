@@ -1,0 +1,164 @@
+/**
+ * @title Firebase Security Rules for Ceylanta Calories App
+ * @author AI Architect
+ * @version 1.0
+ *
+ * @description
+ * This ruleset enforces a strict, user-centric security model for the Ceylanta
+ * Calories application. The core philosophy is that users have complete control
+ * over their own data, and no user can see or modify another user's data.
+ *
+ * @philosophy
+ * Core Philosophy: A strict user-ownership model is enforced. All data is
+ * considered private to the user who created it.
+ *
+ * Data Structure: All user-specific data, including profiles, food entries,
+ * and daily summaries, is organized hierarchically under the `/users/{userId}`
+ * path. This path-based ownership is the foundation of the security model.
+ *
+ * Key Security Decisions:
+ * - User Isolation: A user can only perform operations within their own
+ *   data tree (i.e., `/users/{request.auth.uid}/...`).
+ * - No User Listing: It is impossible for any client to list all documents
+ *   in the top-level `/users` collection, protecting user privacy.
+ * - Relational Integrity: On creation, we enforce that internal ID fields
+ *   (like `userProfileId`) correctly reference the parent user document. These
+ *   fields are then made immutable to prevent re-association.
+ * - Prototyping Flexibility: While authorization is strict, data schemas are
+ *   not. The rules do not validate the shape or type of most fields, allowing
+ *   for rapid application development and iteration.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the fundamental check for data ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete
+     * operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates required data for creating a UserProfile document.
+     * Ensures the document's internal `id` matches the user's auth UID.
+     */
+    function hasValidUserProfileDataForCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * Validates required data for updating a UserProfile document.
+     * Enforces the immutability of the ownership link.
+     */
+    function hasValidUserProfileDataForUpdate() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * Validates required data for creating a FoodEntry document.
+     * Ensures the document's internal `userProfileId` points to the correct owner.
+     */
+    function hasValidFoodEntryDataForCreate(userId) {
+      return request.resource.data.userProfileId == userId;
+    }
+
+    /**
+     * Validates required data for updating a FoodEntry document.
+     * Enforces the immutability of the ownership link.
+     */
+    function hasValidFoodEntryDataForUpdate() {
+      return request.resource.data.userProfileId == resource.data.userProfileId;
+    }
+
+    /**
+     * Validates required data for creating a DailySummary document.
+     * Ensures the document's internal `userProfileId` points to the correct owner.
+     */
+    function hasValidDailySummaryDataForCreate(userId) {
+      return request.resource.data.userProfileId == userId;
+    }
+
+    /**
+     * Validates required data for updating a DailySummary document.
+     * Enforces the immutability of the ownership link.
+     */
+    function hasValidDailySummaryDataForUpdate() {
+      return request.resource.data.userProfileId == resource.data.userProfileId;
+    }
+
+
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Rules for a user's own profile document.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user can create their own profile.
+     * @allow (get, update, delete) The owner can read, update, and delete their own profile.
+     * @deny (list) No user can list all user profiles in the collection.
+     * @deny (get) A user cannot get another user's profile.
+     * @principle Restricts access to a user's own data tree and allows self-creation.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && hasValidUserProfileDataForCreate(userId);
+      allow update: if isExistingOwner(userId) && hasValidUserProfileDataForUpdate();
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Rules for a user's private collection of food entries.
+       * @path /users/{userId}/foodEntries/{foodEntryId}
+       * @allow (get, list, create, update, delete) The owner can perform all operations on their own food entries.
+       * @deny (get) A user cannot access another user's food entries.
+       * @deny (list) A user cannot list another user's food entries.
+       * @principle Enforces document ownership and relational integrity for subcollections.
+       */
+      match /foodEntries/{foodEntryId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidFoodEntryDataForCreate(userId);
+        allow update: if isExistingOwner(userId) && hasValidFoodEntryDataForUpdate();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Rules for a user's private collection of daily summaries.
+       * @path /users/{userId}/dailySummaries/{dailySummaryId}
+       * @allow (get, list, create, update, delete) The owner can perform all operations on their own daily summaries.
+       * @deny (get) A user cannot access another user's daily summaries.
+       * @deny (list) A user cannot list another user's daily summaries.
+       * @principle Enforces document ownership and relational integrity for subcollections.
+       */
+      match /dailySummaries/{dailySummaryId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasValidDailySummaryDataForCreate(userId);
+        allow update: if isExistingOwner(userId) && hasValidDailySummaryDataForUpdate();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}
