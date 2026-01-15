@@ -2,10 +2,6 @@
 
 /**
  * @fileOverview This file defines a Genkit flow for generating personalized meal plans.
- *
- * @exports generateMealPlan - The main function to get a personalized meal plan.
- * @exports GenerateMealPlanInput - The input type for the generateMealPlan function.
- * @exports GenerateMealPlanOutput - The output type for the generateMealPlan function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -13,12 +9,12 @@ import { z } from 'zod';
 
 const MealItemSchema = z.object({
   name: z.string().describe('Name of the food item.'),
-  calories: z.number().describe('Estimated calories for the meal item.'),
+  calories: z.coerce.number().describe('Estimated calories for the meal item.'),
 });
 
 const MealSchema = z.object({
   items: z.array(MealItemSchema).describe('List of food items for the meal.'),
-  totalCalories: z.number().describe('Total estimated calories for the meal.'),
+  totalCalories: z.coerce.number().describe('Total estimated calories for the meal.'),
 });
 
 const GenerateMealPlanOutputSchema = z.object({
@@ -26,7 +22,7 @@ const GenerateMealPlanOutputSchema = z.object({
   lunch: MealSchema,
   dinner: MealSchema,
   snacks: MealSchema,
-  totalCalories: z.number().describe('Total estimated calories for the entire day.'),
+  totalCalories: z.coerce.number().describe('Total estimated calories for the entire day.'),
   notes: z.string().describe('Additional notes or advice about the meal plan.'),
 });
 export type GenerateMealPlanOutput = z.infer<typeof GenerateMealPlanOutputSchema>;
@@ -34,7 +30,7 @@ export type GenerateMealPlanOutput = z.infer<typeof GenerateMealPlanOutputSchema
 const GenerateMealPlanInputSchema = z.object({
   goal: z.string().describe("The user's primary dietary goal (e.g., 'weight loss', 'weight gain', 'maintain weight')."),
   preferences: z.string().describe("User's food preferences (e.g., 'Sri Lankan food', 'vegetarian', 'high protein')."),
-  targetCalories: z.number().describe('The target daily calorie intake for the user.'),
+  targetCalories: z.coerce.number().describe('The target daily calorie intake for the user.'),
 });
 export type GenerateMealPlanInput = z.infer<typeof GenerateMealPlanInputSchema>;
 
