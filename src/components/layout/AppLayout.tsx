@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/sidebar';
 import Header from './Header';
 import { AppContext } from '@/context/AppContext';
+import BottomNavBar from './BottomNavBar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -78,7 +79,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <Header />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
+        <BottomNavBar />
       </SidebarInset>
     </SidebarProvider>
   );
