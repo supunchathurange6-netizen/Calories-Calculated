@@ -62,7 +62,7 @@ export default function RunPage() {
             )}
         </div>
       
-      {hasRunData && MOCK_RUN_DATA ? (
+      {hasRunData ? (
         <Card>
             <CardHeader>
             <CardTitle>Morning Run</CardTitle>
@@ -75,8 +75,8 @@ export default function RunPage() {
                     <StatCard title="Avg. Pace" value={MOCK_RUN_DATA.pace} icon={Zap} />
                     <StatCard title="Calories Burned" value={MOCK_RUN_DATA.calories} icon={Flame} />
                 </div>
-                <div className="relative h-48 w-full max-w-lg mx-auto">
-                    <Image src={MOCK_RUN_DATA.imageUrl} alt="Person running" data-ai-hint="person running" layout="fill" className="rounded-lg object-cover" />
+                <div className="relative h-64 w-full max-w-2xl mx-auto">
+                    <Image src="/images/running-route.png" alt="Map of a running route" data-ai-hint="running route map" fill className="rounded-lg object-contain" />
                 </div>
             </CardContent>
         </Card>
@@ -88,7 +88,7 @@ export default function RunPage() {
             </CardHeader>
             <CardContent className="space-y-6 flex flex-col items-center justify-center min-h-[300px]">
                 <div className="relative h-48 w-full max-w-sm mx-auto mb-4">
-                    <Image src="https://picsum.photos/seed/startrun/600/400" alt="Person getting ready to run" data-ai-hint="runner stretching" layout="fill" className="rounded-lg object-cover" />
+                    <Image src="https://picsum.photos/seed/startrun/600/400" alt="Person getting ready to run" data-ai-hint="runner stretching" fill className="rounded-lg object-cover" />
                 </div>
                 <p className="text-muted-foreground">Live tracking feature is coming soon!</p>
                 <Button size="lg" onClick={() => setHasRunData(true)}>
