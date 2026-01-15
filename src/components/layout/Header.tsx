@@ -1,6 +1,5 @@
 'use client';
 import React, { useContext } from 'react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AppContext } from '@/context/AppContext';
 import { usePathname } from 'next/navigation';
@@ -16,6 +15,8 @@ const getPageTitle = (pathname: string) => {
             return 'Profile';
         case '/progress':
             return 'Progress';
+        case '/scan':
+            return 'Scan QR Code';
         default:
             return 'Ceylanta Calories';
     }
@@ -27,9 +28,6 @@ export default function Header() {
 
     return (
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
-            <div className="md:hidden">
-              <SidebarTrigger />
-            </div>
             <h1 className="text-lg font-semibold md:text-xl font-headline flex-1">
                 {getPageTitle(pathname)}
             </h1>

@@ -7,7 +7,7 @@ import {
   Home,
   User as UserIcon,
   UtensilsCrossed,
-  PanelLeft,
+  QrCode,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -18,12 +18,10 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  useSidebar,
 } from '@/components/ui/sidebar';
 import Header from './Header';
 import { AppContext } from '@/context/AppContext';
 import BottomNavBar from './BottomNavBar';
-import { Button } from '../ui/button';
 
 function MobileHeader() {
   const pathname = usePathname();
@@ -36,6 +34,8 @@ function MobileHeader() {
             return 'Profile';
         case '/progress':
             return 'Progress';
+        case '/scan':
+            return 'Scan QR Code';
         default:
             return 'Ceylanta Calories';
     }
@@ -64,6 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
+    { href: '/scan', label: 'Scan', icon: QrCode },
     { href: '/progress', label: 'Progress', icon: BarChart3 },
     { href: '/profile', label: 'Profile', icon: UserIcon },
   ];
@@ -74,7 +75,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>;
   }
   
-  if (!profile) {
+  if (!profile && pathname !== '/profile') {
     return <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
   }
 
