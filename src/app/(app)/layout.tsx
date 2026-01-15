@@ -24,33 +24,6 @@ import Header from '@/components/layout/Header';
 import { AppContext } from '@/context/AppContext';
 import BottomNavBar from '@/components/layout/BottomNavBar';
 
-function MobileHeader() {
-  const pathname = usePathname();
-
-  const getPageTitle = (pathname: string) => {
-    switch (pathname) {
-        case '/dashboard':
-            return 'Dashboard';
-        case '/profile':
-            return 'Profile';
-        case '/progress':
-            return 'Progress';
-        case '/scan':
-            return 'Scan QR Code';
-        default:
-            return 'Ceylanta Calories';
-    }
-  }
-
-  return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:hidden justify-center">
-      <h1 className="text-lg font-semibold md:text-xl font-headline flex-1 text-center">
-          {getPageTitle(pathname)}
-      </h1>
-    </header>
-  );
-}
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { profile, isInitialized } = useContext(AppContext);
@@ -106,10 +79,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <div className="hidden md:block">
-          <Header />
-        </div>
-        <MobileHeader />
+        <Header />
         <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
         <BottomNavBar />
       </SidebarInset>
