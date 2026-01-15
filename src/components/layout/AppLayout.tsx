@@ -8,6 +8,7 @@ import {
   User as UserIcon,
   UtensilsCrossed,
   QrCode,
+  Footprints,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -36,6 +37,8 @@ function MobileHeader() {
             return 'Progress';
         case '/scan':
             return 'Scan QR Code';
+        case '/run':
+            return 'Running';
         default:
             return 'Ceylanta Calories';
     }
@@ -64,6 +67,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
+    { href: '/run', label: 'Run', icon: Footprints },
     { href: '/scan', label: 'Scan', icon: QrCode },
     { href: '/progress', label: 'Progress', icon: BarChart3 },
     { href: '/profile', label: 'Profile', icon: UserIcon },
