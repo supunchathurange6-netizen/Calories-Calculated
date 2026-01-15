@@ -8,6 +8,7 @@ import DailyMealLog from '@/components/dashboard/DailyMealLog';
 import Welcome from '@/components/dashboard/Welcome';
 import PersonalizedSuggestions from '@/components/ai/PersonalizedSuggestions';
 import { Skeleton } from '@/components/ui/skeleton';
+import MealPlanGenerator from '@/components/ai/MealPlanGenerator';
 
 export default function Home() {
   const { profile, isInitialized } = useContext(AppContext);
@@ -38,6 +39,7 @@ export default function Home() {
             <PersonalizedSuggestions />
         </div>
       </div>
+      <MealPlanGenerator />
       <DailyMealLog />
     </div>
   );
