@@ -10,6 +10,7 @@ import jsQR from 'jsqr';
 import { AppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 
 export default function ScanPage() {
