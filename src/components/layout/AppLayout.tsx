@@ -58,10 +58,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
-    if (isInitialized && !profile) {
-      if (pathname.startsWith('/dashboard') || pathname.startsWith('/progress') || pathname.startsWith('/scan')) {
+    // Only redirect if initialization is complete, there is no profile, AND we are not on the welcome or profile page.
+    if (isInitialized && !profile && pathname !== '/' && pathname !== '/profile') {
         router.replace('/profile');
-      }
     }
   }, [isInitialized, profile, pathname, router]);
 
