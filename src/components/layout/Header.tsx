@@ -29,6 +29,7 @@ export default function Header() {
   const pathname = usePathname();
   const [quote, setQuote] = useState({ timeOfDay: 'morning', text: '' });
   const [isClient, setIsClient] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   useEffect(() => {
     // This ensures the code runs only on the client, avoiding SSR issues.
@@ -38,7 +39,7 @@ export default function Header() {
 
 
   const MotivationalPopover = () => (
-    <Popover>
+    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon">
           <Sparkles className="h-5 w-5 text-primary" />
@@ -48,7 +49,7 @@ export default function Header() {
       <PopoverContent className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">Good {quote.timeOfDay}!</h4>
+            <h4 className="font-medium leading-none">සුබ {quote.timeOfDay}!</h4>
             <p className="text-sm text-muted-foreground">
               {quote.text}
             </p>
