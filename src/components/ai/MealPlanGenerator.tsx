@@ -6,15 +6,20 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sparkles, Utensils } from 'lucide-react';
 import { AppContext } from '@/context/AppContext';
 import { GenerateMealPlanInput, GenerateMealPlanOutput, generateMealPlan } from '@/ai/flows/meal-plan-flow';
 import { Textarea } from '../ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { z } from 'zod';
 
-const formSchema = GenerateMealPlanInputSchema.omit({ targetCalories: true, goal: true });
+const formSchema = z.object({
+  preferences: z.string().min(1, "Please describe your preferences."),
+});
+
+type MealPlanFormValues = z.infer<typeof formSchema>;
+
 
 export default function MealPlanGenerator() {
   const [mealPlan, setMealPlan] = useState<GenerateMealPlanOutput | null>(null);
@@ -22,14 +27,14 @@ export default function MealPlanGenerator() {
   const { toast } = useToast();
   const { profile, calorieInfo } = useContext(AppContext);
 
-  const form = useForm<GenerateMealPlanInput>({
+  const form = useForm<MealPlanFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       preferences: 'Sri Lankan food, healthy',
     },
   });
 
-  async function onSubmit(values: Omit<GenerateMealPlanInput, 'targetCalories' | 'goal'>) {
+  async function onSubmit(values: MealPlanFormValues) {
     if (!profile || !calorieInfo) {
         toast({
             title: 'Profile Not Found',

@@ -21,7 +21,7 @@ const MealSchema = z.object({
   totalCalories: z.number().describe('Total estimated calories for the meal.'),
 });
 
-export const GenerateMealPlanOutputSchema = z.object({
+const GenerateMealPlanOutputSchema = z.object({
   breakfast: MealSchema,
   lunch: MealSchema,
   dinner: MealSchema,
@@ -31,7 +31,7 @@ export const GenerateMealPlanOutputSchema = z.object({
 });
 export type GenerateMealPlanOutput = z.infer<typeof GenerateMealPlanOutputSchema>;
 
-export const GenerateMealPlanInputSchema = z.object({
+const GenerateMealPlanInputSchema = z.object({
   goal: z.string().describe("The user's primary dietary goal (e.g., 'weight loss', 'weight gain', 'maintain weight')."),
   preferences: z.string().describe("User's food preferences (e.g., 'Sri Lankan food', 'vegetarian', 'high protein')."),
   targetCalories: z.number().describe('The target daily calorie intake for the user.'),
