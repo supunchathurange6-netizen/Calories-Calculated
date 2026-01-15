@@ -4,10 +4,10 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { AppContext } from '@/context/AppContext';
 import Image from 'next/image';
-import placeholderImage from '@/lib/placeholder-images.json'
+import { PlaceHolderImages } from '@/lib/placeholder-images'
 import { Card } from '../ui/card';
 
-const chartImage = placeholderImage.placeholderImages.find(p => p.id === 'progress-chart-bg');
+const chartImage = PlaceHolderImages.find(p => p.id === 'progress-chart-bg');
 
 export default function WeightChart() {
   const { weightHistory } = useContext(AppContext);

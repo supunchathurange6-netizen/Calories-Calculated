@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
-import placeholderImage from '@/lib/placeholder-images.json';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AppContext } from '@/context/AppContext';
 
-const heroImage = placeholderImage.placeholderImages.find(p => p.id === 'hero-background');
+const heroImage = PlaceHolderImages.find(p => p.id === 'hero-background');
 
 export default function Welcome() {
   const { profile } = useContext(AppContext);
