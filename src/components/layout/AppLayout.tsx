@@ -7,6 +7,7 @@ import {
   Home,
   User as UserIcon,
   UtensilsCrossed,
+  PanelLeft,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -17,10 +18,48 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import Header from './Header';
 import { AppContext } from '@/context/AppContext';
 import BottomNavBar from './BottomNavBar';
+import { Button } from '../ui/button';
+
+function MobileHeader() {
+  const { toggleSidebar } = useSidebar();
+  const pathname = usePathname();
+
+  const getPageTitle = (pathname: string) => {
+    switch (pathname) {
+        case '/':
+            return 'Home';
+        case '/profile':
+            return 'Profile';
+        case '/progress':
+            return 'Progress';
+        default:
+            return 'Ceylanta Calories';
+    }
+  }
+
+  return (
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:hidden">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={toggleSidebar}
+      >
+        <PanelLeft className="h-5 w-5" />
+        <span className="sr-only">Toggle Menu</span>
+      </Button>
+      <h1 className="text-lg font-semibold md:text-xl font-headline flex-1">
+          {getPageTitle(pathname)}
+      </h1>
+      <div className="w-8" />
+    </header>
+  );
+}
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -79,7 +118,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
-        <Header />
+        <div className="hidden md:block">
+          <Header />
+        </div>
+        <MobileHeader />
         <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
         <BottomNavBar />
       </SidebarInset>
