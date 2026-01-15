@@ -44,12 +44,12 @@ export default function DailyMealLog() {
           <div className="space-y-2">
             {foods.length > 0 ? (
               foods.map((food: LoggedFood) => (
-                <div key={food.logId} className="flex justify-between items-center p-2 rounded-md bg-background">
+                <div key={food.id} className="flex justify-between items-center p-2 rounded-md bg-background">
                   <div>
                     <p className="font-semibold">{food.name}</p>
                     <p className="text-sm text-muted-foreground">{Math.round(food.calories * food.servings)} kcal &bull; {food.servings} serving(s)</p>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => removeFoodLog(food.logId)}>
+                  <Button variant="ghost" size="icon" onClick={() => removeFoodLog(food.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

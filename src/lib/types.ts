@@ -1,9 +1,12 @@
+import { Timestamp } from 'firebase/firestore';
+
 export type ActivityLevel = 'low' | 'medium' | 'high';
 export type Goal = 'lose' | 'maintain' | 'gain';
 export type Gender = 'male' | 'female';
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snacks';
 
 export interface UserProfile {
+  id: string;
   name: string;
   age: number;
   gender: Gender;
@@ -34,10 +37,11 @@ export interface Food {
 }
 
 export interface LoggedFood extends Food {
-  logId: string;
+  id: string; // Firestore document ID
   mealType: MealType;
-  timestamp: number;
+  timestamp: Timestamp;
   servings: number;
+  userProfileId: string;
 }
 
 export interface WeightEntry {

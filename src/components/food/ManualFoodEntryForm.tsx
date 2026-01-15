@@ -32,14 +32,23 @@ export default function ManualFoodEntryForm({ onFoodAdded, mealType }: ManualFoo
     defaultValues: { name: '', calories: 0, protein: 0, carbs: 0, fat: 0 },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const newFood = addCustomFood(values);
-    addFoodLog(newFood, mealType, 1);
-    toast({
-      title: 'Custom Food Added!',
-      description: `${values.name} has been added to your log and saved for future use.`,
-    });
-    onFoodAdded();
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const newFood = await addCustomFood(values);
+      addFoodLog(newFood, mealType, 1);
+      toast({
+        title: 'Custom Food Added!',
+        description: `${values.name} has been added to your log and saved for future use.`,
+      });
+      onFoodAdded();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Could not add custom food. Please try again.',
+        variant: 'destructive',
+      });
+      console.error(error);
+    }
   }
 
   return (

@@ -1,10 +1,15 @@
 'use client';
 
-import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useMemo, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { calculateCalorieInfo } from '@/lib/calculations';
 import type { UserProfile, CalorieInfo, Food, LoggedFood, MealType, WeightEntry } from '@/lib/types';
 import { format } from 'date-fns';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, doc, setDoc, addDoc, deleteDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { getAuth } from 'firebase/auth';
 
 interface AppContextType {
   isInitialized: boolean;
@@ -17,7 +22,7 @@ interface AppContextType {
   setProfile: (profile: UserProfile) => void;
   addFoodLog: (food: Food, mealType: MealType, servings: number) => void;
   removeFoodLog: (logId: string) => void;
-  addCustomFood: (food: Omit<Food, 'id' | 'isCustom'>) => Food;
+  addCustomFood: (food: Omit<Food, 'id' | 'isCustom'>) => Promise<Food>;
   addWeightEntry: (weight: number) => void;
 }
 
@@ -32,112 +37,100 @@ export const AppContext = createContext<AppContextType>({
   setProfile: () => {},
   addFoodLog: () => {},
   removeFoodLog: () => {},
-  addCustomFood: () => ({} as Food),
+  addCustomFood: async () => ({} as Food),
   addWeightEntry: () => {},
 });
 
-// Custom hook for localStorage
-function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === 'undefined') {
-      return initialValue;
-    }
-    try {
-      const item = window.localStorage.getItem(key);
-      // Handle cases where item might be "undefined" or null
-      if (item && item !== 'undefined') {
-        return JSON.parse(item);
-      }
-      return initialValue;
-    } catch (error) {
-      console.error(error);
-      return initialValue;
-    }
-  });
-
-  const setValue = (value: T) => {
-    try {
-      setStoredValue(value);
-      if (typeof window !== 'undefined') {
-        if (value === undefined) {
-          window.localStorage.removeItem(key);
-        } else {
-          window.localStorage.setItem(key, JSON.stringify(value));
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  return [storedValue, setValue];
-}
-
-
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [profile, setProfileState] = useLocalStorage<UserProfile | null>('userProfile', null);
-  const [calorieInfo, setCalorieInfo] = useLocalStorage<CalorieInfo | null>('calorieInfo', null);
-  const [loggedFoods, setLoggedFoods] = useLocalStorage<LoggedFood[]>('loggedFoods', []);
-  const [customFoods, setCustomFoods] = useLocalStorage<Food[]>('customFoods', []);
-  const [weightHistory, setWeightHistory] = useLocalStorage<WeightEntry[]>('weightHistory', []);
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  useEffect(() => {
-    setIsInitialized(true);
+  const profileRef = useMemoFirebase(() => user ? doc(firestore, 'users', user.uid) : null, [firestore, user]);
+  const { data: profile, isLoading: isProfileLoading } = useDoc<UserProfile>(profileRef);
+  
+  const customFoodsQuery = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'customFoods') : null, [firestore, user]);
+  const { data: customFoods, isLoading: isCustomFoodsLoading } = useCollection<Food>(customFoodsQuery);
+
+  const weightHistoryQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'weightHistory'), orderBy('date', 'asc')) : null, [firestore, user]);
+  const { data: weightHistory, isLoading: isWeightHistoryLoading } = useCollection<WeightEntry>(weightHistoryQuery);
+  
+  const todayStart = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    return Timestamp.fromDate(start);
   }, []);
 
-  const setProfile = useCallback((newProfile: UserProfile) => {
-    setProfileState(newProfile);
-    const newCalorieInfo = calculateCalorieInfo(newProfile);
-    setCalorieInfo(newCalorieInfo);
-  }, [setProfileState, setCalorieInfo]);
+  const loggedFoodsQuery = useMemoFirebase(() => user ? query(collection(firestore, 'users', user.uid, 'foodEntries'), where('timestamp', '>=', todayStart)) : null, [firestore, user]);
+  const { data: loggedFoods, isLoading: isLoggedFoodsLoading } = useCollection<LoggedFood>(loggedFoodsQuery);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(getAuth());
+    }
+  }, [isUserLoading, user]);
+
+  const isInitialized = !isUserLoading && !isProfileLoading && !isCustomFoodsLoading && !isWeightHistoryLoading && !isLoggedFoodsLoading;
+
+  const calorieInfo = useMemo(() => {
+    if (profile) {
+      return calculateCalorieInfo(profile);
+    }
+    return null;
+  }, [profile]);
+  
+  const setProfile = useCallback((newProfileData: UserProfile) => {
+    if (user) {
+      const profileDataWithId = { ...newProfileData, id: user.uid };
+      setDocumentNonBlocking(doc(firestore, 'users', user.uid), profileDataWithId, { merge: true });
+    }
+  }, [user, firestore]);
 
   const addFoodLog = useCallback((food: Food, mealType: MealType, servings: number) => {
-    const newLog: LoggedFood = {
-      ...food,
-      logId: `log_${new Date().getTime()}`,
-      mealType,
-      servings,
-      timestamp: new Date().getTime(),
-    };
-    setLoggedFoods(prev => [newLog, ...prev]);
-  }, [setLoggedFoods]);
+    if (user) {
+      const newLog = {
+        ...food,
+        mealType,
+        servings,
+        timestamp: Timestamp.now(),
+        userProfileId: user.uid,
+      };
+      // No need for logId as firestore will generate one
+      addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'foodEntries'), newLog);
+    }
+  }, [user, firestore]);
 
   const removeFoodLog = useCallback((logId: string) => {
-    setLoggedFoods(prev => prev.filter(log => log.logId !== logId));
-  }, [setLoggedFoods]);
+    if (user) {
+      deleteDocumentNonBlocking(doc(firestore, 'users', user.uid, 'foodEntries', logId));
+    }
+  }, [user, firestore]);
   
-  const addCustomFood = useCallback((foodData: Omit<Food, 'id' | 'isCustom'>): Food => {
-    const newFood: Food = {
-      ...foodData,
-      id: `custom_${new Date().getTime()}`,
-      isCustom: true,
-    };
-    setCustomFoods(prev => [newFood, ...prev]);
-    return newFood;
-  }, [setCustomFoods]);
+  const addCustomFood = useCallback(async (foodData: Omit<Food, 'id' | 'isCustom'>): Promise<Food> => {
+    if (user) {
+        const newFood: Omit<Food, 'id'> = {
+            ...foodData,
+            isCustom: true,
+        };
+        const docRef = await addDoc(collection(firestore, 'users', user.uid, 'customFoods'), newFood);
+        return { ...newFood, id: docRef.id };
+    }
+    throw new Error("User not authenticated");
+  }, [user, firestore]);
 
   const addWeightEntry = useCallback((weight: number) => {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const newEntry: WeightEntry = { date: today, weight };
-
-    setWeightHistory(prev => {
-        const existingEntryIndex = prev.findIndex(entry => entry.date === today);
-        if (existingEntryIndex > -1) {
-            const updatedHistory = [...prev];
-            updatedHistory[existingEntryIndex] = newEntry;
-            return updatedHistory;
-        }
-        return [...prev, newEntry];
-    });
-  }, [setWeightHistory]);
+    if(user) {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const newEntry: WeightEntry = { date: today, weight };
+        const weightDocRef = doc(firestore, 'users', user.uid, 'weightHistory', today);
+        setDocumentNonBlocking(weightDocRef, newEntry);
+    }
+  }, [user, firestore]);
 
   const dailyTotals = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return loggedFoods
-      .filter(food => new Date(food.timestamp) >= today)
-      .reduce(
+    return (loggedFoods || []).reduce(
         (totals, food) => {
           totals.calories += food.calories * food.servings;
           totals.protein += food.protein * food.servings;
@@ -149,30 +142,13 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       );
   }, [loggedFoods]);
 
-  useEffect(() => {
-    // Clear logs daily
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const midnight = new Date(today);
-    midnight.setDate(midnight.getDate() + 1);
-    
-    const timeToMidnight = midnight.getTime() - new Date().getTime();
-    
-    const timeoutId = setTimeout(() => {
-      setLoggedFoods([]);
-    }, timeToMidnight);
-
-    return () => clearTimeout(timeoutId);
-  }, [loggedFoods, setLoggedFoods]);
-
-
   const value = {
     isInitialized,
-    profile,
+    profile: profile || null,
     calorieInfo,
-    loggedFoods,
-    customFoods,
-    weightHistory,
+    loggedFoods: loggedFoods || [],
+    customFoods: customFoods || [],
+    weightHistory: weightHistory || [],
     dailyTotals,
     setProfile,
     addFoodLog,
