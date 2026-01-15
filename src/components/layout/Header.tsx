@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AppContext } from '@/context/AppContext';
 import { usePathname } from 'next/navigation';
-import { User } from 'lucide-react';
+import { User, Bell } from 'lucide-react';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 
@@ -33,12 +33,18 @@ export default function Header() {
             </h1>
             <div className="flex items-center gap-4">
                {profile ? (
-                 <Avatar className="h-9 w-9">
-                    <AvatarImage src={`https://i.pravatar.cc/150?u=${profile?.name}`} />
-                    <AvatarFallback>
-                        {profile ? profile.name.charAt(0).toUpperCase() : <User />}
-                    </AvatarFallback>
-                </Avatar>
+                <>
+                    <Button variant="ghost" size="icon">
+                        <Bell className="h-5 w-5" />
+                        <span className="sr-only">Notifications</span>
+                    </Button>
+                    <Avatar className="h-9 w-9">
+                        <AvatarImage src={`https://i.pravatar.cc/150?u=${profile?.name}`} />
+                        <AvatarFallback>
+                            {profile ? profile.name.charAt(0).toUpperCase() : <User />}
+                        </AvatarFallback>
+                    </Avatar>
+                </>
                ) : (
                 <Button asChild>
                     <Link href="/profile">Get Started</Link>
