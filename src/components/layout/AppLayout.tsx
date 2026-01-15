@@ -56,7 +56,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
-    if (isInitialized && !profile && pathname !== '/profile') {
+    // Redirect to profile creation if not on the welcome or profile page, and no profile exists.
+    if (isInitialized && !profile && pathname !== '/profile' && pathname !== '/') {
       router.replace('/profile');
     }
   }, [isInitialized, profile, pathname, router]);
@@ -75,9 +76,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>;
   }
   
-  if (!profile && pathname !== '/profile') {
+  // If no profile, and the user is not trying to create one, show the children (Welcome page).
+  if (!profile && pathname === '/') {
     return <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
   }
+
+  // If no profile but user is on the profile page, allow it.
+  if (!profile && pathname === '/profile') {
+     return <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
+  }
+  
 
   return (
     <SidebarProvider>
