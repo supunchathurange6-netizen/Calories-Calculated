@@ -8,6 +8,7 @@ import {
   User as UserIcon,
   UtensilsCrossed,
   QrCode,
+  Footprints, // Added Footprints
 } from 'lucide-react';
 import {
   SidebarProvider,
