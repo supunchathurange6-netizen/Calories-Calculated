@@ -6,6 +6,7 @@ import { AppContext } from '@/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import ProgressSummary from '@/components/progress/ProgressSummary';
 
 export default function ProgressPage() {
   const { isInitialized, profile } = useContext(AppContext);
@@ -29,6 +30,7 @@ export default function ProgressPage() {
   return (
     <div className="space-y-6 p-4 md:p-6">
       <h1 className="text-3xl font-headline">Your Progress</h1>
+      <ProgressSummary />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
