@@ -91,7 +91,7 @@ export default function RunPage() {
                     <Image src="https://picsum.photos/seed/startrun/600/400" alt="Person getting ready to run" data-ai-hint="runner stretching" layout="fill" className="rounded-lg object-cover" />
                 </div>
                 <p className="text-muted-foreground">Live tracking feature is coming soon!</p>
-                <Button size="lg" onClick={() => setHasRunData(true)} disabled>
+                <Button size="lg" onClick={() => setHasRunData(true)}>
                     <PlayCircle className="mr-2" /> Start Live Tracking
                 </Button>
             </CardContent>
