@@ -26,7 +26,6 @@ import BottomNavBar from './BottomNavBar';
 import { Button } from '../ui/button';
 
 function MobileHeader() {
-  const { toggleSidebar } = useSidebar();
   const pathname = usePathname();
 
   const getPageTitle = (pathname: string) => {
@@ -43,20 +42,10 @@ function MobileHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:hidden">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        onClick={toggleSidebar}
-      >
-        <PanelLeft className="h-5 w-5" />
-        <span className="sr-only">Toggle Menu</span>
-      </Button>
-      <h1 className="text-lg font-semibold md:text-xl font-headline flex-1">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:hidden justify-center">
+      <h1 className="text-lg font-semibold md:text-xl font-headline flex-1 text-center">
           {getPageTitle(pathname)}
       </h1>
-      <div className="w-8" />
     </header>
   );
 }
