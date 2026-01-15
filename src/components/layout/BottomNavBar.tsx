@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BarChart3, User as UserIcon, QrCode } from 'lucide-react';
+import { LayoutDashboard, BarChart3, User as UserIcon, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/', label: 'Home', icon: Home },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/scan', label: 'Scan', icon: QrCode },
   { href: '/progress', label: 'Progress', icon: BarChart3 },
   { href: '/profile', label: 'Profile', icon: UserIcon },
@@ -14,6 +14,9 @@ const navItems = [
 
 export default function BottomNavBar() {
   const pathname = usePathname();
+
+  // Don't render the nav bar on the root welcome page
+  if (pathname === '/') return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-sm md:hidden">

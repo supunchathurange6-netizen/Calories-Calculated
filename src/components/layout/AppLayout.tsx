@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   BarChart3,
-  Home,
+  LayoutDashboard,
   User as UserIcon,
   UtensilsCrossed,
   QrCode,
@@ -29,7 +29,9 @@ function MobileHeader() {
   const getPageTitle = (pathname: string) => {
     switch (pathname) {
         case '/':
-            return 'Home';
+            return 'Welcome';
+        case '/dashboard':
+            return 'Dashboard';
         case '/profile':
             return 'Profile';
         case '/progress':
@@ -56,15 +58,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
-    // Redirect to profile creation if not on the welcome or profile page, and no profile exists.
-    if (isInitialized && !profile && pathname !== '/profile' && pathname !== '/') {
-      router.replace('/profile');
+    if (isInitialized && !profile) {
+      if (pathname.startsWith('/dashboard') || pathname.startsWith('/progress') || pathname.startsWith('/scan')) {
+        router.replace('/profile');
+      }
     }
   }, [isInitialized, profile, pathname, router]);
 
 
   const navItems = [
-    { href: '/', label: 'Home', icon: Home },
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/scan', label: 'Scan', icon: QrCode },
     { href: '/progress', label: 'Progress', icon: BarChart3 },
     { href: '/profile', label: 'Profile', icon: UserIcon },
@@ -76,14 +79,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>;
   }
   
-  // If no profile, and the user is not trying to create one, show the children (Welcome page).
-  if (!profile && pathname === '/') {
-    return <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
-  }
-
-  // If no profile but user is on the profile page, allow it.
-  if (!profile && pathname === '/profile') {
-     return <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
+  if (pathname === '/') {
+    return <main className="flex-1">{children}</main>
   }
   
 

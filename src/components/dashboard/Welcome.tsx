@@ -1,14 +1,17 @@
 'use client';
+import { useContext } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import placeholderImage from '@/lib/placeholder-images.json';
-import { UtensilsCrossed } from 'lucide-react';
+import { AppContext } from '@/context/AppContext';
 
 const heroImage = placeholderImage.placeholderImages.find(p => p.id === 'hero-background');
 
 export default function Welcome() {
+  const { profile } = useContext(AppContext);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center p-4">
       {heroImage && (
@@ -39,12 +42,16 @@ export default function Welcome() {
             Start Your Wellness Journey
           </CardTitle>
           <CardDescription>
-            To get started, let's create your personalized profile. It only takes a minute.
+            {profile 
+              ? "You have a profile. Let's get started!" 
+              : "To get started, let's create your personalized profile. It only takes a minute."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild size="lg" className="w-full font-headline">
-            <Link href="/profile">Create Your Profile</Link>
+            <Link href={profile ? "/dashboard" : "/profile"}>
+              {profile ? "Get Started" : "Create Your Profile"}
+            </Link>
           </Button>
         </CardContent>
       </Card>

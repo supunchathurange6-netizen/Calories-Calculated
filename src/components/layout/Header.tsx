@@ -10,7 +10,9 @@ import Link from 'next/link';
 const getPageTitle = (pathname: string) => {
     switch (pathname) {
         case '/':
-            return 'Home';
+            return 'Welcome';
+        case '/dashboard':
+            return 'Dashboard';
         case '/profile':
             return 'Profile';
         case '/progress':
