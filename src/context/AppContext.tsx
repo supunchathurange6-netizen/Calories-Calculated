@@ -44,7 +44,11 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
     }
     try {
       const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
+      // Handle cases where item might be "undefined" or null
+      if (item && item !== 'undefined') {
+        return JSON.parse(item);
+      }
+      return initialValue;
     } catch (error) {
       console.error(error);
       return initialValue;
@@ -55,7 +59,11 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
     try {
       setStoredValue(value);
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(key, JSON.stringify(value));
+        if (value === undefined) {
+          window.localStorage.removeItem(key);
+        } else {
+          window.localStorage.setItem(key, JSON.stringify(value));
+        }
       }
     } catch (error) {
       console.error(error);
