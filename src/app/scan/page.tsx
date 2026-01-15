@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Camera, Loader2, QrCode } from 'lucide-react';
+import { Camera, Loader2, QrCode, Info } from 'lucide-react';
 import jsQR from 'jsqr';
 import { AppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
@@ -101,7 +101,8 @@ export default function ScanPage() {
       cancelAnimationFrame(animationFrameId);
       stopScan();
     };
-  }, [isScanning, hasCameraPermission, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isScanning, hasCameraPermission]);
 
   if (!isInitialized) {
     return <div className="p-4">Loading...</div>;
@@ -166,6 +167,19 @@ export default function ScanPage() {
                 </AlertDescription>
             </Alert>
         )}
+
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>What can you scan?</AlertTitle>
+          <AlertDescription>
+            <ul className="list-disc list-inside text-xs mt-2 space-y-1">
+              <li><b>Packaged Foods:</b> Scan the QR code on packaged food items to automatically get nutrition info.</li>
+              <li><b>Custom Meals:</b> Create QR codes for your homemade meals for quick logging later.</li>
+              <li><b>Restaurant Menus:</b> Scan QR codes at supported restaurants and canteens.</li>
+            </ul>
+             <p className="text-xs mt-2 text-muted-foreground">(This feature is currently in development)</p>
+          </AlertDescription>
+        </Alert>
 
       </CardContent>
     </Card>
