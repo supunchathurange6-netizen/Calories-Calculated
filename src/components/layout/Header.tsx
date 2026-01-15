@@ -17,8 +17,6 @@ const getPageTitle = (pathname: string) => {
             return 'Progress';
         case '/scan':
             return 'Scan QR Code';
-        case '/run':
-            return 'Running';
         default:
             return 'Ceylanta Calories';
     }

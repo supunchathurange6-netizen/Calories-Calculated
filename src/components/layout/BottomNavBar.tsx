@@ -2,12 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BarChart3, User as UserIcon, QrCode, Footprints } from 'lucide-react';
+import { Home, BarChart3, User as UserIcon, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/run', label: 'Run', icon: Footprints },
   { href: '/scan', label: 'Scan', icon: QrCode },
   { href: '/progress', label: 'Progress', icon: BarChart3 },
   { href: '/profile', label: 'Profile', icon: UserIcon },
