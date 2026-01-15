@@ -35,7 +35,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
 
   const navItems = [
-    { href: '/', label: 'Dashboard', icon: Home },
+    { href: '/', label: 'Home', icon: Home },
     { href: '/progress', label: 'Progress', icon: BarChart3 },
     { href: '/profile', label: 'Profile', icon: UserIcon },
   ];

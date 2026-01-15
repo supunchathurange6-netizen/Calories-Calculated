@@ -9,7 +9,7 @@ import { User } from 'lucide-react';
 const getPageTitle = (pathname: string) => {
     switch (pathname) {
         case '/':
-            return 'Dashboard';
+            return 'Home';
         case '/profile':
             return 'Profile';
         case '/progress':
