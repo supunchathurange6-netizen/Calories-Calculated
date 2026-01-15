@@ -9,27 +9,27 @@ const heroImage = placeholderImage.placeholderImages.find(p => p.id === 'hero-ba
 
 export default function Welcome() {
   return (
-    <Card className="w-full text-center shadow-xl overflow-hidden">
+    <Card className="w-full text-center overflow-hidden border-0 shadow-none bg-transparent">
         {heroImage && 
-            <div className="relative h-48 w-full">
+            <div className="relative h-56 w-full">
                  <Image
                     src={heroImage.imageUrl}
                     alt={heroImage.description}
                     data-ai-hint={heroImage.imageHint}
                     fill
-                    className="object-cover"
+                    className="object-cover rounded-xl"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
             </div>
         }
-      <CardHeader className="mt-[-2rem] z-10 relative">
-        <CardTitle className="font-headline text-4xl">Welcome to Ceylanta Calories!</CardTitle>
-        <CardDescription className="max-w-md mx-auto">
+      <CardHeader className="mt-[-3rem] z-10 relative">
+        <CardTitle className="font-headline text-3xl md:text-4xl">Welcome to Ceylanta Calories!</CardTitle>
+        <CardDescription className="max-w-lg mx-auto !mt-4">
           Your personal guide to healthy eating with a Sri Lankan flavor. Track your meals, count your calories, and reach your wellness goals.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="mb-6">
+        <p className="mb-6 text-muted-foreground">
           To get started, let's create your personalized profile.
         </p>
         <Button asChild size="lg" className="font-headline">

@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sparkles } from 'lucide-react';
 import { personalizedFoodSuggestions } from '@/ai/flows/personalized-food-suggestions';
-import { Card } from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 
 const formSchema = z.object({
   dietaryGoals: z.string().min(1, 'Please state your dietary goals.'),
@@ -62,9 +62,9 @@ export default function PersonalizedSuggestions() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full h-full text-lg p-6 bg-accent/50 border-2 border-dashed hover:bg-accent/80 transition-all duration-300">
-          <Sparkles className="mr-2 h-5 w-5" />
-          Get AI Food Suggestions
+        <Button variant="outline" className="w-full h-full text-base md:text-lg p-6 bg-card border-2 border-dashed hover:bg-accent/20 transition-all duration-300 flex flex-col items-center justify-center gap-2">
+          <Sparkles className="h-8 w-8 text-primary" />
+          <span>Get AI Food Suggestions</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
@@ -132,12 +132,14 @@ export default function PersonalizedSuggestions() {
         {suggestions.length > 0 && (
           <div className="mt-4 space-y-2">
             <h3 className="font-semibold">Here are some ideas:</h3>
-            <Card className="p-4">
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                {suggestions.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
+            <Card>
+                <CardContent className="p-4">
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                        {suggestions.map((s, i) => (
+                        <li key={i}>{s}</li>
+                        ))}
+                    </ul>
+                </CardContent>
             </Card>
           </div>
         )}

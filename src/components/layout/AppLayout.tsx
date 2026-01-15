@@ -47,16 +47,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
   
   if (!profile) {
-    return <>{children}</>
+    return <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
   }
 
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar variant='inset' collapsible='icon'>
         <SidebarHeader>
-          <div className="flex items-center gap-2 p-2">
+          <div className="flex items-center gap-2 p-2 justify-center">
             <UtensilsCrossed className="w-8 h-8 text-primary" />
-            <h1 className="font-headline text-2xl font-semibold">Ceylanta</h1>
+            <h1 className="font-headline text-2xl font-semibold group-data-[collapsible=icon]:hidden">Ceylanta</h1>
           </div>
         </SidebarHeader>
         <SidebarContent>
