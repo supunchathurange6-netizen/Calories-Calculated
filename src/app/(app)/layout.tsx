@@ -30,8 +30,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
-    // Only redirect if initialization is complete, there is no profile, AND we are not on the profile page.
-    if (isInitialized && !profile && pathname !== '/profile') {
+    // Redirect to profile creation if initialization is complete, there is no profile,
+    // and the user is not on the profile or admin pages.
+    if (isInitialized && !profile && pathname !== '/profile' && !pathname.startsWith('/admin')) {
         router.replace('/profile');
     }
   }, [isInitialized, profile, pathname, router]);
