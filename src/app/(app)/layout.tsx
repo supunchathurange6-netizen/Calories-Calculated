@@ -74,7 +74,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       asChild
                       isActive={pathname === item.href}
                       tooltip={item.label}
-                      className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
+                      className="data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground"
                     >
                     <Link href={item.href}>
                       <item.icon />
