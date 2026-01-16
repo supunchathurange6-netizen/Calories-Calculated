@@ -2,12 +2,21 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AppContext } from '@/context/AppContext';
-import { usePathname } from 'next/navigation';
-import { User, Sparkles } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { User, Sparkles, LogOut } from 'lucide-react';
 import { Button } from '../ui/button';
 import Link from 'next/link';
 import { getTodaysQuote } from '@/lib/get-motivational-quote';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 
 const getPageTitle = (pathname: string) => {
   switch (pathname) {
@@ -25,8 +34,9 @@ const getPageTitle = (pathname: string) => {
 };
 
 export default function Header() {
-  const { profile } = useContext(AppContext);
+  const { profile, signOut } = useContext(AppContext);
   const pathname = usePathname();
+  const router = useRouter();
   const [quote, setQuote] = useState({ timeOfDay: 'morning', text: '' });
   const [isClient, setIsClient] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -36,6 +46,11 @@ export default function Header() {
     setIsClient(true);
     setQuote(getTodaysQuote());
   }, []);
+
+  const handleSignOut = () => {
+    signOut();
+    router.push('/');
+  };
 
 
   const MotivationalPopover = () => (
@@ -69,12 +84,30 @@ export default function Header() {
         {profile ? (
           <>
             {isClient && <MotivationalPopover />}
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={`https://i.pravatar.cc/150?u=${profile?.name}`} />
-              <AvatarFallback>
-                {profile ? profile.name.charAt(0).toUpperCase() : <User />}
-              </AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={`https://i.pravatar.cc/150?u=${profile?.name}`} />
+                    <AvatarFallback>
+                      {profile ? profile.name.charAt(0).toUpperCase() : <User />}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{profile.name}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         ) : (
           <Button asChild>

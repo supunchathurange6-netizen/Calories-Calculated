@@ -9,7 +9,7 @@ import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@
 import { collection, doc, addDoc, query, where, orderBy, Timestamp, setDoc } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
-import { getAuth } from 'firebase/auth';
+import { getAuth, signOut as firebaseSignOut } from 'firebase/auth';
 
 interface AppContextType {
   isInitialized: boolean;
@@ -24,6 +24,7 @@ interface AppContextType {
   removeFoodLog: (logId: string) => void;
   addCustomFood: (food: Omit<Food, 'id' | 'isCustom'>) => Promise<Food>;
   addWeightEntry: (weight: number) => void;
+  signOut: () => void;
 }
 
 export const AppContext = createContext<AppContextType>({
@@ -39,6 +40,7 @@ export const AppContext = createContext<AppContextType>({
   removeFoodLog: () => {},
   addCustomFood: async () => ({} as Food),
   addWeightEntry: () => {},
+  signOut: () => {},
 });
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
@@ -125,6 +127,17 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, firestore]);
 
+  const signOut = useCallback(() => {
+    const auth = getAuth();
+    firebaseSignOut(auth).catch((error) => {
+        toast({
+            variant: 'destructive',
+            title: 'Sign Out Error',
+            description: error.message || 'There was a problem signing out.',
+        });
+    });
+  }, [toast]);
+
   const dailyTotals = useMemo(() => {
     return (loggedFoods || []).reduce(
       (totals, food) => {
@@ -152,6 +165,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     removeFoodLog,
     addCustomFood,
     addWeightEntry,
+    signOut,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
