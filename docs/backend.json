@@ -1,11 +1,10 @@
-
 {
   "entities": {
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user's profile, containing personal information and settings for the Ceylanta Calories app.",
+      "description": "Represents a user's profile, including personal information and activity level.",
       "properties": {
         "id": {
           "type": "string",
@@ -13,7 +12,7 @@
         },
         "name": {
           "type": "string",
-          "description": "User's full name."
+          "description": "User's name."
         },
         "age": {
           "type": "number",
@@ -21,7 +20,7 @@
         },
         "gender": {
           "type": "string",
-          "description": "User's gender (e.g., male, female, other)."
+          "description": "User's gender."
         },
         "height": {
           "type": "number",
@@ -33,11 +32,11 @@
         },
         "activityLevel": {
           "type": "string",
-          "description": "User's activity level (e.g., low, medium, high)."
+          "description": "User's activity level (Low, Medium, High)."
         },
         "goal": {
           "type": "string",
-          "description": "User's fitness goal (e.g., lose weight, maintain, gain weight)."
+          "description": "User's weight management goal (Lose Weight, Maintain, Gain Weight)."
         }
       },
       "required": [
@@ -55,41 +54,41 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "FoodEntry",
       "type": "object",
-      "description": "Represents a single food item logged by the user.",
+      "description": "Represents a user's food intake entry for a specific meal.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the food entry."
         },
-        "userProfileId": {
+        "userId": {
           "type": "string",
           "description": "Reference to UserProfile. (Relationship: UserProfile 1:N FoodEntry)"
         },
         "foodName": {
           "type": "string",
-          "description": "Name of the food item."
+          "description": "Name of the food consumed."
         },
         "calories": {
           "type": "number",
-          "description": "Number of calories in the food item."
+          "description": "Number of calories in the food entry."
         },
         "portionSize": {
           "type": "string",
-          "description": "The amount of food consumed (e.g., 1 cup, 1 slice)."
+          "description": "Portion size of the food consumed."
         },
         "mealType": {
           "type": "string",
-          "description": "The meal type (e.g., breakfast, lunch, dinner)."
+          "description": "Type of meal (breakfast, lunch, dinner)."
         },
         "date": {
           "type": "string",
-          "description": "The date when the food was consumed.",
+          "description": "Date of the food entry.",
           "format": "date-time"
         }
       },
       "required": [
         "id",
-        "userProfileId",
+        "userId",
         "foodName",
         "calories",
         "portionSize",
@@ -101,13 +100,13 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "DailySummary",
       "type": "object",
-      "description": "Represents a summary of the user's daily calorie intake and progress.",
+      "description": "Represents a user's daily calorie summary.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the daily summary."
         },
-        "userProfileId": {
+        "userId": {
           "type": "string",
           "description": "Reference to UserProfile. (Relationship: UserProfile 1:N DailySummary)"
         },
@@ -116,76 +115,91 @@
           "description": "Date of the summary.",
           "format": "date-time"
         },
-        "caloriesConsumed": {
+        "caloriesEaten": {
           "type": "number",
           "description": "Total calories consumed on the day."
         },
         "caloriesRemaining": {
           "type": "number",
-          "description": "Remaining calories for the day based on the user's goal."
+          "description": "Remaining calories for the day."
         },
-        "burnedCalories": {
+        "caloriesBurned": {
           "type": "number",
-          "description": "Calories burned through exercise or activity."
+          "description": "Calories burned through exercise (optional)."
         }
       },
       "required": [
         "id",
-        "userProfileId",
+        "userId",
         "date",
-        "caloriesConsumed",
+        "caloriesEaten",
         "caloriesRemaining"
       ]
     },
-    "CustomFood": {
+    "ProgressTracking": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CustomFood",
+      "title": "ProgressTracking",
       "type": "object",
-      "description": "Represents a food item manually entered by the user.",
+      "description": "Represents a user's weight and calorie intake progress over time.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the custom food."
+          "description": "Unique identifier for the progress tracking entry."
         },
-        "name": {
+        "userId": {
           "type": "string",
-          "description": "Name of the food."
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ProgressTracking)"
         },
-        "calories": {
-          "type": "number"
+        "date": {
+          "type": "string",
+          "description": "Date of the progress tracking entry.",
+          "format": "date-time"
         },
-        "protein": {
-          "type": "number"
+        "weight": {
+          "type": "number",
+          "description": "User's weight on the given date."
         },
-        "carbs": {
-          "type": "number"
-        },
-        "fat": {
-          "type": "number"
-        },
-        "isCustom": {
-            "type": "boolean"
+        "averageCalories": {
+          "type": "number",
+          "description": "Average daily calorie intake during the tracking period (weekly/monthly)."
         }
       },
-      "required": ["name", "calories", "isCustom"]
+      "required": [
+        "id",
+        "userId",
+        "date",
+        "weight",
+        "averageCalories"
+      ]
     },
-    "WeightEntry": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "WeightEntry",
-        "type": "object",
-        "description": "A single weight measurement for a user on a specific date.",
-        "properties": {
-            "date": {
-                "type": "string",
-                "format": "date",
-                "description": "The date of the weight entry in YYYY-MM-DD format."
-            },
-            "weight": {
-                "type": "number",
-                "description": "The user's weight in kilograms."
-            }
+    "FoodItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FoodItem",
+      "type": "object",
+      "description": "Represents a food item with its calorie information, potentially manually entered by the user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the food item."
         },
-        "required": ["date", "weight"]
+        "foodName": {
+          "type": "string",
+          "description": "Name of the food item."
+        },
+        "calories": {
+          "type": "number",
+          "description": "Number of calories per serving of the food item."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile.  If null, a standard food.  Otherwise, created by the user. (Relationship: UserProfile 1:N FoodItem)"
+        }
+      },
+      "required": [
+        "id",
+        "foodName",
+        "calories"
+      ]
     }
   },
   "auth": {
@@ -195,35 +209,100 @@
     ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": {
-        "$ref": "#/backend/entities/UserProfile"
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. The userId is the Firebase Authentication UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user."
+            }
+          ]
+        }
       },
-      "description": "Stores user profile information. The `userId` is used for path-based ownership."
-    },
-    "/users/{userId}/foodEntries/{foodEntryId}": {
-      "schema": {
-        "$ref": "#/backend/entities/FoodEntry"
+      {
+        "path": "/users/{userId}/food_entries/{foodEntryId}",
+        "definition": {
+          "entityName": "FoodEntry",
+          "schema": {
+            "$ref": "#/backend/entities/FoodEntry"
+          },
+          "description": "Stores individual food entries for a specific user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user."
+            },
+            {
+              "name": "foodEntryId",
+              "description": "Unique identifier for the food entry."
+            }
+          ]
+        }
       },
-      "description": "Stores individual food entries for a user."
-    },
-    "/users/{userId}/dailySummaries/{dailySummaryId}": {
-      "schema": {
-        "$ref": "#/backend/entities/DailySummary"
+      {
+        "path": "/users/{userId}/daily_summaries/{dailySummaryId}",
+        "definition": {
+          "entityName": "DailySummary",
+          "schema": {
+            "$ref": "#/backend/entities/DailySummary"
+          },
+          "description": "Stores daily calorie summaries for a specific user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user."
+            },
+            {
+              "name": "dailySummaryId",
+              "description": "Unique identifier for the daily summary."
+            }
+          ]
+        }
       },
-      "description": "Stores daily summaries of calorie intake for a user."
-    },
-    "/users/{userId}/customFoods/{customFoodId}": {
-      "schema": {
-        "$ref": "#/backend/entities/CustomFood"
+      {
+        "path": "/users/{userId}/progress_tracking/{progressTrackingId}",
+        "definition": {
+          "entityName": "ProgressTracking",
+          "schema": {
+            "$ref": "#/backend/entities/ProgressTracking"
+          },
+          "description": "Stores weight and calorie intake progress for a specific user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user."
+            },
+            {
+              "name": "progressTrackingId",
+              "description": "Unique identifier for the progress tracking entry."
+            }
+          ]
+        }
       },
-      "description": "Stores custom food items created by a user."
-    },
-    "/users/{userId}/weightHistory/{weightEntryId}": {
-      "schema": {
-          "$ref": "#/backend/entities/WeightEntry"
-      },
-      "description": "Stores a user's weight history. The document ID is the date (YYYY-MM-DD)."
-    }
+      {
+        "path": "/food_items/{foodItemId}",
+        "definition": {
+          "entityName": "FoodItem",
+          "schema": {
+            "$ref": "#/backend/entities/FoodItem"
+          },
+          "description": "Stores global food items available to all users.  User created food items are stored here as well with the 'userId' populated.",
+          "params": [
+            {
+              "name": "foodItemId",
+              "description": "Unique identifier for the food item."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure data security, scalability, and ease of management, following the principles of Authorization Independence, Structural Segregation, and Access Modeling. User profiles, food entries, daily summaries, progress tracking, and food items are stored in separate collections. User-specific data is nested under the `/users/{userId}` path to enforce ownership.  This approach avoids complex authorization rules that rely on `get()` calls, improving efficiency and security. FoodItems can be global (created by admin) or user-specific.\n\nAuthorization Independence: The `FoodEntry`, `DailySummary`, and `ProgressTracking` documents each contain a `userId` field, which is a denormalized copy of the user's ID. This eliminates the need to perform `get()` operations in security rules to verify ownership, enabling atomic operations. Similarly, FoodItems created by a user also contain the userId, while public FoodItems have a null userId. This allows security rules to easily distinguish between public and user-created food items.\n\nQAPs: The use of hierarchical paths for user-owned data enables secure list operations. For example, listing food entries is restricted to the user who owns them by querying `/users/{userId}/food_entries`. Segregation into separate collections based on data type (user profiles, food entries, etc.) further simplifies security rules and prevents unauthorized access."
   }
 }

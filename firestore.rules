@@ -1,176 +1,129 @@
 /**
- * @title Firebase Security Rules for Ceylanta Calories App
- * @author AI Architect
- * @version 1.1
+ * Core Philosophy: This ruleset enforces a strict user-ownership model where all private user data is
+ * sandboxed within their own data tree. This ensures users can only ever access their own information,
+ * preventing unauthorized data access between users.
  *
- * @description
- * This ruleset enforces a strict, user-centric security model for the Ceylanta
- * Calories application. The core philosophy is that users have complete control
- * over their own data, and no user can see or modify another user's data.
- *
- * @philosophy
- * Core Philosophy: A strict user-ownership model is enforced. All data is
- * considered private to the user who created it.
- *
- * Data Structure: All user-specific data, including profiles, food entries,
- * and daily summaries, is organized hierarchically under the `/users/{userId}`
- * path. This path-based ownership is the foundation of the security model.
+ * Data Structure: User data is organized hierarchically under /users/{userId}, with specific data types
+ * like food entries and daily summaries in nested subcollections. This structure allows for simple and
+ * powerful path-based security rules. A top-level /food_items collection stores globally accessible food
+ * data, which can be read by anyone.
  *
  * Key Security Decisions:
- * - User Isolation: A user can only perform operations within their own
- *   data tree (i.e., `/users/{request.auth.uid}/...`).
- * - No User Listing: It is impossible for any client to list all documents
- *   in the top-level `/users` collection, protecting user privacy.
- * - Relational Integrity: On creation, we enforce that internal ID fields
- *   (like `userProfileId`) correctly reference the parent user document. These
- *   fields are then made immutable to prevent re-association.
- * - Prototyping Flexibility: While authorization is strict, data schemas are
- *   not. The rules do not validate the shape or type of most fields, allowing
- *   for rapid application development and iteration.
+ * - User Listing Disabled: The top-level /users collection cannot be listed to protect user privacy and
+ *   prevent enumeration attacks.
+ * - Public Read, Owner-Only Write: The /food_items collection is publicly readable, allowing any user to
+ *   access the food database. However, only authenticated users can add new items, and they can only
+ *   modify or delete the items they themselves have created.
+ * - Strict Ownership: All subcollections under a user's document are strictly owned. A user must be
+ *   authenticated with the matching userId from the path to perform any action on those documents.
+ * - Authorization Independence: User-specific documents (like FoodEntry) contain a denormalized `userId`
+ *   field. This avoids costly and slow `get()` calls in security rules, making authorization checks
+ *   fast and efficient.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ----------------------------------------------------------------------
-    // Helper Functions
-    // ----------------------------------------------------------------------
-
-    /**
-     * Checks if a user is authenticated.
-     */
+    // Helper functions for reusable logic
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the currently authenticated user's UID matches the provided userId.
-     * This is the fundamental check for data ownership.
-     */
+    // Checks if the requesting user is the owner based on a UID.
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Checks for ownership on an existing document. Used for update and delete
-     * operations to prevent acting on non-existent data.
-     */
+    // Checks for ownership on an existing document. Used for update/delete.
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
-    /**
-     * Validates required data for creating a UserProfile document.
-     * Ensures the document's internal `id` matches the user's auth UID.
-     */
-    function hasValidUserProfileDataForCreate(userId) {
-      return request.resource.data.id == userId;
+    // Validates that the user ID in the path matches the user ID in the document's body.
+    // On update, ensures the userId field is immutable.
+    function hasConsistentOwnerId(userId) {
+      // On create, the client MUST provide a 'userId' field matching the path.
+      // On update, the 'userId' field MUST NOT be changed.
+      return request.resource.data.userId == userId && (resource == null || request.resource.data.userId == resource.data.userId);
     }
 
     /**
-     * Validates required data for updating a UserProfile document.
-     * Enforces the immutability of the ownership link.
-     */
-    function hasValidUserProfileDataForUpdate() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * Validates required data for creating a FoodEntry document.
-     * Ensures the document's internal `userProfileId` points to the correct owner.
-     */
-    function hasValidFoodEntryDataForCreate(userId) {
-      return request.resource.data.userProfileId == userId;
-    }
-
-    /**
-     * Validates required data for updating a FoodEntry document.
-     * Enforces the immutability of the ownership link.
-     */
-    function hasValidFoodEntryDataForUpdate() {
-      return request.resource.data.userProfileId == resource.data.userProfileId;
-    }
-
-    /**
-     * Validates required data for creating a DailySummary document.
-     * Ensures the document's internal `userProfileId` points to the correct owner.
-     */
-    function hasValidDailySummaryDataForCreate(userId) {
-      return request.resource.data.userProfileId == userId;
-    }
-
-    /**
-     * Validates required data for updating a DailySummary document.
-     * Enforces the immutability of the ownership link.
-     */
-    function hasValidDailySummaryDataForUpdate() {
-      return request.resource.data.userProfileId == resource.data.userProfileId;
-    }
-
-
-    // ----------------------------------------------------------------------
-    // Collection Rules
-    // ----------------------------------------------------------------------
-
-    /**
-     * @description Rules for a user's own profile document.
+     * @description Rules for the UserProfile document.
      * @path /users/{userId}
-     * @allow (create) An authenticated user can create their own profile.
-     * @allow (get, update, delete) The owner can read, update, and delete their own profile.
-     * @deny (list) No user can list all user profiles in the collection.
-     * @deny (get) A user cannot get another user's profile.
-     * @principle Restricts access to a user's own data tree and allows self-creation.
+     * @allow (create) An authenticated user with UID 'user_abc' creating their own profile at /users/user_abc.
+     * @deny (get) User 'user_xyz' trying to read the profile at /users/user_abc.
+     * @deny (list) Any user trying to list all documents in the /users collection.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && hasValidUserProfileDataForCreate(userId);
-      allow update: if isExistingOwner(userId) && hasValidUserProfileDataForUpdate();
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
 
       /**
-       * @description Rules for a user's private collection of food entries.
-       * @path /users/{userId}/foodEntries/{foodEntryId}
-       * @allow (get, list, create, update, delete) The owner can perform all operations on their own food entries.
-       * @deny (get) A user cannot access another user's food entries.
-       * @deny (list) A user cannot list another user's food entries.
-       * @principle Enforces document ownership and relational integrity for subcollections.
+       * @description Rules for a user's private food entries.
+       * @path /users/{userId}/food_entries/{foodEntryId}
+       * @allow (get, list, create, update, delete) User 'user_abc' accessing any document in /users/user_abc/food_entries.
+       * @deny (get) User 'user_xyz' trying to read a document in /users/user_abc/food_entries.
+       * @principle Enforces strict ownership for all documents in a user's subcollection.
        */
-      match /foodEntries/{foodEntryId} {
-        allow read, write: if isOwner(userId);
+      match /food_entries/{foodEntryId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasConsistentOwnerId(userId);
+        allow update: if isExistingOwner(userId) && hasConsistentOwnerId(userId);
+        allow delete: if isExistingOwner(userId);
       }
 
       /**
-       * @description Rules for a user's private collection of daily summaries.
-       * @path /users/{userId}/dailySummaries/{dailySummaryId}
-       * @allow (get, list, create, update, delete) The owner can perform all operations on their own daily summaries.
-       * @deny (get) A user cannot access another user's daily summaries.
-       * @deny (list) A user cannot list another user's daily summaries.
-       * @principle Enforces document ownership and relational integrity for subcollections.
+       * @description Rules for a user's private daily summaries.
+       * @path /users/{userId}/daily_summaries/{dailySummaryId}
+       * @allow (get, list, create, update, delete) User 'user_abc' accessing any document in /users/user_abc/daily_summaries.
+       * @deny (get) User 'user_xyz' trying to read a document in /users/user_abc/daily_summaries.
+       * @principle Enforces strict ownership for all documents in a user's subcollection.
        */
-      match /dailySummaries/{dailySummaryId} {
-        allow read, write: if isOwner(userId);
+      match /daily_summaries/{dailySummaryId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasConsistentOwnerId(userId);
+        allow update: if isExistingOwner(userId) && hasConsistentOwnerId(userId);
+        allow delete: if isExistingOwner(userId);
       }
 
       /**
-       * @description Rules for a user's private collection of custom foods.
-       * @path /users/{userId}/customFoods/{customFoodId}
-       * @allow (read, write) The owner can perform all operations on their own custom foods.
-       * @principle Enforces document ownership for subcollections.
+       * @description Rules for a user's private progress tracking data.
+       * @path /users/{userId}/progress_tracking/{progressTrackingId}
+       * @allow (get, list, create, update, delete) User 'user_abc' accessing any document in /users/user_abc/progress_tracking.
+       * @deny (get) User 'user_xyz' trying to read a document in /users/user_abc/progress_tracking.
+       * @principle Enforces strict ownership for all documents in a user's subcollection.
        */
-      match /customFoods/{customFoodId} {
-          allow read, write: if isOwner(userId);
+      match /progress_tracking/{progressTrackingId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && hasConsistentOwnerId(userId);
+        allow update: if isExistingOwner(userId) && hasConsistentOwnerId(userId);
+        allow delete: if isExistingOwner(userId);
       }
+    }
 
-      /**
-       * @description Rules for a user's private collection of weight history.
-       * @path /users/{userId}/weightHistory/{weightEntryId}
-       * @allow (read, write) The owner can perform all operations on their own weight history.
-       * @principle Enforces document ownership for subcollections.
-       */
-      match /weightHistory/{weightEntryId} {
-          allow read, write: if isOwner(userId);
-      }
+    /**
+     * @description Rules for the shared food items database.
+     * @path /food_items/{foodItemId}
+     * @allow (get, list) Any user, signed in or not, can read any food item.
+     * @allow (create) Any signed-in user can create a new food item, but must set the 'userId' field to their own UID.
+     * @allow (update) User 'user_abc' can update a food item they previously created (where resource.data.userId == 'user_abc').
+     * @deny (update) User 'user_xyz' trying to update a food item created by 'user_abc'.
+     * @deny (delete) Any user trying to delete a global food item (where resource.data.userId is null).
+     * @principle Allows public read access while ensuring write operations are restricted to the original creator of the document.
+     */
+    match /food_items/{foodItemId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if resource != null && isSignedIn() && request.auth.uid == resource.data.userId && request.resource.data.userId == resource.data.userId;
+      allow delete: if resource != null && isSignedIn() && request.auth.uid == resource.data.userId;
     }
   }
 }
