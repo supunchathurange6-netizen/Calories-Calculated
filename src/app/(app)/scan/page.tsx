@@ -29,41 +29,52 @@ export default function ScanPage() {
     }
   }, [isInitialized, profile, router]);
 
-  const startScan = async () => {
-    setIsScanning(true);
-    setQrData(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      setHasCameraPermission(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+  // Effect to handle camera stream activation and cleanup
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    
+    const enableCamera = async () => {
+      try {
+        // Using a more generic constraint for better device compatibility
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setHasCameraPermission(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Please enable camera permissions in your browser settings.',
+        });
+        setIsScanning(false); // Stop scanning if permission is denied
       }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      setHasCameraPermission(false);
-      toast({
-        variant: 'destructive',
-        title: 'Camera Access Denied',
-        description: 'Please enable camera permissions in your browser settings.',
-      });
-      setIsScanning(false);
-    }
-  };
+    };
 
-  const stopScan = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+    if (isScanning) {
+      enableCamera();
     }
-    setIsScanning(false);
-  };
-  
+
+    return () => {
+      // Cleanup function to stop the stream when scanning stops or component unmounts
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, [isScanning, toast]);
+
+
+  // Effect for the QR scanning loop
   useEffect(() => {
     let animationFrameId: number;
 
     const scan = () => {
-      if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && canvasRef.current) {
+      if (isScanning && hasCameraPermission && videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && canvasRef.current) {
         const video = videoRef.current;
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
@@ -80,29 +91,41 @@ export default function ScanPage() {
 
           if (code) {
             setQrData(code.data);
-            stopScan();
+            setIsScanning(false); // This will trigger the cleanup in the other useEffect
             toast({
                 title: "QR Code Scanned!",
                 description: `Data: ${code.data}`
-            })
+            });
           }
         }
       }
-      if(isScanning){
+      // Continue scanning only if still in the scanning state
+      if (isScanning) {
         animationFrameId = requestAnimationFrame(scan);
       }
     };
 
     if (isScanning && hasCameraPermission) {
-      scan();
+      animationFrameId = requestAnimationFrame(scan);
     }
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      stopScan();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isScanning, hasCameraPermission]);
+  }, [isScanning, hasCameraPermission, toast]);
+
+  
+  const startScan = () => {
+    setQrData(null);
+    setHasCameraPermission(null);
+    setIsScanning(true);
+  };
+
+  const stopScan = () => {
+    setIsScanning(false);
+  };
+
 
   if (!isInitialized) {
     return <div className="p-4">Loading...</div>;
