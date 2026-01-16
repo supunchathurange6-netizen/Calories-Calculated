@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Camera, Loader2, QrCode, Info } from 'lucide-react';
+import { Camera, Loader2, QrCode, Info, SwitchCamera } from 'lucide-react';
 import jsQR from 'jsqr';
 import { AppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,9 @@ export default function ScanPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [qrData, setQrData] = useState<string | null>(null);
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [currentDeviceId, setCurrentDeviceId] = useState<string | undefined>();
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
@@ -29,27 +32,28 @@ export default function ScanPage() {
     }
   }, [isInitialized, profile, router]);
 
-  // Effect to handle camera stream activation and cleanup
+  // Effect to handle camera stream activation and cleanup based on the selected device
   useEffect(() => {
     let stream: MediaStream | null = null;
     
     const enableCamera = async () => {
+      if (!isScanning || !currentDeviceId) return;
+
       try {
-        // Using a more generic constraint for better device compatibility
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        setHasCameraPermission(true);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: currentDeviceId } }
+        });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
       } catch (error) {
-        console.error('Error accessing camera:', error);
-        setHasCameraPermission(false);
+        console.error('Error starting camera stream:', error);
         toast({
           variant: 'destructive',
-          title: 'Camera Access Denied',
-          description: 'Please enable camera permissions in your browser settings.',
+          title: 'Camera Error',
+          description: 'Could not start the selected camera. Please try another one or check permissions.',
         });
-        setIsScanning(false); // Stop scanning if permission is denied
+        setIsScanning(false);
       }
     };
 
@@ -58,7 +62,7 @@ export default function ScanPage() {
     }
 
     return () => {
-      // Cleanup function to stop the stream when scanning stops or component unmounts
+      // Cleanup function to stop the stream
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
@@ -66,7 +70,7 @@ export default function ScanPage() {
         videoRef.current.srcObject = null;
       }
     };
-  }, [isScanning, toast]);
+  }, [isScanning, currentDeviceId, toast]);
 
 
   // Effect for the QR scanning loop
@@ -91,7 +95,7 @@ export default function ScanPage() {
 
           if (code) {
             setQrData(code.data);
-            setIsScanning(false); // This will trigger the cleanup in the other useEffect
+            setIsScanning(false);
             toast({
                 title: "QR Code Scanned!",
                 description: `Data: ${code.data}`
@@ -99,7 +103,6 @@ export default function ScanPage() {
           }
         }
       }
-      // Continue scanning only if still in the scanning state
       if (isScanning) {
         animationFrameId = requestAnimationFrame(scan);
       }
@@ -116,14 +119,50 @@ export default function ScanPage() {
   }, [isScanning, hasCameraPermission, toast]);
 
   
-  const startScan = () => {
+  const startScan = async () => {
     setQrData(null);
     setHasCameraPermission(null);
-    setIsScanning(true);
+    try {
+      // Request permission first to get access to device labels.
+      const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setHasCameraPermission(true);
+      tempStream.getTracks().forEach(track => track.stop()); // Stop temp stream.
+
+      // Now get the list of devices
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevs = devices.filter(d => d.kind === 'videoinput');
+      setVideoDevices(videoDevs);
+
+      if (videoDevs.length > 0) {
+        // Prefer the back camera ('environment') if available.
+        const backCamera = videoDevs.find(d => d.label.toLowerCase().includes('back'));
+        setCurrentDeviceId(backCamera ? backCamera.deviceId : videoDevs[0].deviceId);
+        setIsScanning(true);
+      } else {
+        throw new Error('No video devices found.');
+      }
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Please enable camera permissions in your browser settings.',
+        });
+    }
   };
 
   const stopScan = () => {
     setIsScanning(false);
+    setVideoDevices([]);
+    setCurrentDeviceId(undefined);
+  };
+
+  const handleSwitchCamera = () => {
+    if (videoDevices.length < 2) return;
+    const currentIndex = videoDevices.findIndex(d => d.deviceId === currentDeviceId);
+    const nextIndex = (currentIndex + 1) % videoDevices.length;
+    setCurrentDeviceId(videoDevices[nextIndex].deviceId);
   };
 
 
@@ -170,15 +209,24 @@ export default function ScanPage() {
             </Alert>
         )}
 
-        {!isScanning ? (
-          <Button onClick={startScan} className="w-full" size="lg">
-            <Camera className="mr-2" /> Start Scanning
-          </Button>
-        ) : (
-          <Button onClick={stopScan} className="w-full" size="lg" variant="destructive">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Stop Scanning
-          </Button>
-        )}
+        <div className="flex w-full items-center gap-2">
+            {!isScanning ? (
+            <Button onClick={startScan} className="w-full" size="lg">
+                <Camera className="mr-2" /> Start Scanning
+            </Button>
+            ) : (
+            <Button onClick={stopScan} className="w-full" size="lg" variant="destructive">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Stop Scanning
+            </Button>
+            )}
+
+            {isScanning && videoDevices.length > 1 && (
+                <Button onClick={handleSwitchCamera} size="lg" variant="outline" className="px-4">
+                    <SwitchCamera />
+                    <span className="sr-only">Switch Camera</span>
+                </Button>
+            )}
+        </div>
 
         {qrData && (
             <Alert>
