@@ -137,6 +137,30 @@
         }
       },
       "required": ["date", "weight"]
+    },
+    "SafetySettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SafetySettings",
+      "description": "Defines the safety filter thresholds for generative AI models.",
+      "type": "object",
+      "properties": {
+        "HARM_CATEGORY_HATE_SPEECH": {
+          "type": "string",
+          "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"]
+        },
+        "HARM_CATEGORY_DANGEROUS_CONTENT": {
+          "type": "string",
+          "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"]
+        },
+        "HARM_CATEGORY_HARASSMENT": {
+          "type": "string",
+          "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"]
+        },
+        "HARM_CATEGORY_SEXUALLY_EXPLICIT": {
+          "type": "string",
+          "enum": ["BLOCK_NONE", "BLOCK_ONLY_HIGH", "BLOCK_MEDIUM_AND_ABOVE", "BLOCK_LOW_AND_ABOVE"]
+        }
+      }
     }
   },
   "auth": {
@@ -178,8 +202,18 @@
           "schema": { "$ref": "#/entities/WeightEntry" },
           "description": "Stores the weight history for a user. The document ID is the date (YYYY-MM-DD)."
         }
+      },
+      {
+        "path": "/safetySettings/{settingsId}",
+        "definition": {
+          "entityName": "SafetySettings",
+          "schema": {
+            "$ref": "#/entities/SafetySettings"
+          },
+          "description": "Stores global safety settings for the application. Should only be writable by an admin."
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed for a user-centric data model. All user-specific data, including food entries, custom foods, and weight history, is stored in subcollections under that user's document in the top-level 'users' collection. This simplifies security rules by allowing path-based access control, ensuring users can only access their own data. It improves query performance by scoping queries to a single user's data tree. This model follows Firestore's best practices for scalability and security."
+    "reasoning": "The Firestore structure is designed for a user-centric data model. All user-specific data, including food entries, custom foods, and weight history, is stored in subcollections under that user's document in the top-level 'users' collection. This simplifies security rules by allowing path-based access control, ensuring users can only access their own data. It improves query performance by scoping queries to a single user's data tree. Global settings like safety configurations are stored in a separate top-level collection, secured for admin-only access. This model follows Firestore's best practices for scalability and security."
   }
 }

@@ -12,6 +12,11 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+    
+    // Helper function to check if the user has an 'admin' custom claim.
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
 
     // Rules for the 'users' collection.
     match /users/{userId} {
@@ -37,6 +42,12 @@ service cloud.firestore {
       match /weightHistory/{weightEntryId} {
         allow read, list, create, update, delete: if isOwner(userId);
       }
+    }
+
+    // Rules for the 'safetySettings' collection.
+    // Only admins can read or write safety settings.
+    match /safetySettings/{settingsId} {
+      allow read, write: if isAdmin();
     }
   }
 }
