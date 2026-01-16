@@ -1,133 +1,114 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Shield } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
-import { useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useMemo } from 'react';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { UserProfile } from '@/lib/types';
+import { collection } from 'firebase/firestore';
+import { Users, BarChart2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const harmCategories = [
-  'HARM_CATEGORY_HATE_SPEECH',
-  'HARM_CATEGORY_DANGEROUS_CONTENT',
-  'HARM_CATEGORY_HARASSMENT',
-  'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-] as const;
+const chartConfig = {
+  users: {
+    label: 'New Users',
+    color: 'hsl(var(--chart-1))',
+  },
+};
 
-const thresholds = [
-  'BLOCK_NONE',
-  'BLOCK_ONLY_HIGH',
-  'BLOCK_MEDIUM_AND_ABOVE',
-  'BLOCK_LOW_AND_ABOVE',
-] as const;
-
-const safetySettingsSchema = z.object({
-  HARM_CATEGORY_HATE_SPEECH: z.enum(thresholds),
-  HARM_CATEGORY_DANGEROUS_CONTENT: z.enum(thresholds),
-  HARM_CATEGORY_HARASSMENT: z.enum(thresholds),
-  HARM_CATEGORY_SEXUALLY_EXPLICIT: z.enum(thresholds),
-});
-
-type SafetySettingsFormValues = z.infer<typeof safetySettingsSchema>;
 
 export default function AdminPage() {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const firestore = useFirestore();
+  const usersQuery = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
+  const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
 
-  const form = useForm<SafetySettingsFormValues>({
-    resolver: zodResolver(safetySettingsSchema),
-    defaultValues: {
-      HARM_CATEGORY_HATE_SPEECH: 'BLOCK_MEDIUM_AND_ABOVE',
-      HARM_CATEGORY_DANGEROUS_CONTENT: 'BLOCK_MEDIUM_AND_ABOVE',
-      HARM_CATEGORY_HARASSMENT: 'BLOCK_MEDIUM_AND_ABOVE',
-      HARM_CATEGORY_SEXUALLY_EXPLICIT: 'BLOCK_MEDIUM_AND_ABOVE',
-    },
-  });
+  const userStats = useMemo(() => {
+    if (!users) {
+      return {
+        totalUsers: 0,
+        usersByMonth: [],
+      };
+    }
 
-  function onSubmit(data: SafetySettingsFormValues) {
-    setIsLoading(true);
-    
-    const settingsRef = doc(firestore, 'safetySettings', 'global');
-    setDocumentNonBlocking(settingsRef, data, { merge: true });
+    const usersByMonth = users
+      .filter(user => user.createdAt?.toDate)
+      .reduce((acc, user) => {
+        const month = format(user.createdAt.toDate(), 'yyyy-MM');
+        acc[month] = (acc[month] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
 
-    toast({
-      title: 'Success!',
-      description: 'Safety settings have been updated.',
-    });
-    
-    setIsLoading(false);
+    const chartData = Object.entries(usersByMonth)
+      .map(([month, count]) => ({
+        month,
+        users: count,
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    return {
+      totalUsers: users.length,
+      usersByMonth: chartData,
+    };
+  }, [users]);
+  
+  if (isLoading) {
+    return (
+        <div className="p-4 md:p-8 space-y-6">
+            <h1 className="text-3xl font-headline">Admin Dashboard</h1>
+            <div className="grid gap-4 md:grid-cols-3">
+                <Skeleton className="h-28" />
+            </div>
+            <Skeleton className="h-96" />
+        </div>
+    )
   }
 
   return (
-    <div className="flex justify-center items-start p-4 md:p-8">
-      <Card className="w-full max-w-4xl">
+    <div className="p-4 md:p-8 space-y-6">
+      <h1 className="text-3xl font-headline">Admin Dashboard</h1>
+      
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userStats.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">Total registered users in the system</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-2xl flex items-center gap-2">
-            <Shield className="text-primary" />
-            Safety Settings Admin Panel
-          </CardTitle>
-          <CardDescription>
-            Configure the content safety thresholds for the generative AI models. This panel is hidden and should only be accessible to administrators.
-          </CardDescription>
+          <CardTitle className="flex items-center gap-2"><BarChart2 /> User Registration Growth</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {harmCategories.map((category) => (
-                  <FormField
-                    key={category}
-                    control={form.control}
-                    name={category}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-semibold">{category.replace('HARM_CATEGORY_', '')}</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a threshold" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {thresholds.map((threshold) => (
-                              <SelectItem key={threshold} value={threshold}>
-                                {threshold.replace('BLOCK_', '').replace('_', ' ')}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save Settings'}
-              </Button>
-            </form>
-          </Form>
+        <CardContent className="pl-2">
+          {userStats.usersByMonth.length > 0 ? (
+            <ChartContainer config={chartConfig} className="h-80 w-full">
+              <BarChart accessibilityLayer data={userStats.usersByMonth}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                />
+                <YAxis allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Legend />
+                <Bar dataKey="users" fill="var(--color-users)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          ) : (
+             <div className="flex flex-col items-center justify-center h-80 text-center p-8 bg-muted/50 rounded-md">
+                 <h3 className="font-headline text-lg">Not Enough User Data</h3>
+                 <p className="text-sm text-muted-foreground">New user registrations will be shown here once they are recorded.</p>
+             </div>
+          )}
         </CardContent>
       </Card>
     </div>

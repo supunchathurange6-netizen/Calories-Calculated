@@ -21,9 +21,10 @@ service cloud.firestore {
     // Rules for the 'users' collection.
     match /users/{userId} {
       // A user can create, read, update, or delete their own profile document.
-      // No one can list all users.
       allow create, read, update, delete: if isOwner(userId);
-      allow list: if false;
+      // TODO: In production, this should be restricted to admins (e.g., `if isAdmin();`).
+      // For now, allowing any signed-in user to list users for dashboard demonstration.
+      allow list: if isSignedIn();
 
       // Rules for the 'foodEntries' subcollection.
       // A user can manage their own food log entries.

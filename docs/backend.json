@@ -40,6 +40,11 @@
           "type": "string",
           "enum": ["lose", "maintain", "gain"],
           "description": "User's weight management goal."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of when the user profile was created."
         }
       },
       "required": [

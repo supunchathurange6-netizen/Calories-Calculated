@@ -19,7 +19,7 @@ interface AppContextType {
   customFoods: Food[];
   weightHistory: WeightEntry[];
   dailyTotals: { calories: number; protein: number; carbs: number; fat: number; };
-  setProfile: (profile: Omit<UserProfile, 'id'>) => void;
+  setProfile: (profile: Omit<UserProfile, 'id' | 'createdAt'>) => void;
   addFoodLog: (food: Food, mealType: MealType, servings: number) => void;
   removeFoodLog: (logId: string) => void;
   addCustomFood: (food: Omit<Food, 'id' | 'isCustom'>) => Promise<Food>;
@@ -80,12 +80,19 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     return profile ? calculateCalorieInfo(profile) : null;
   }, [profile]);
 
-  const setProfile = useCallback((newProfileData: Omit<UserProfile, 'id'>) => {
+  const setProfile = useCallback((newProfileData: Omit<UserProfile, 'id' | 'createdAt'>) => {
     if (user) {
-      const profileDataWithId = { ...newProfileData, id: user.uid };
-      setDocumentNonBlocking(doc(firestore, 'users', user.uid), profileDataWithId, { merge: true });
+      const docRef = doc(firestore, 'users', user.uid);
+      
+      const dataToSet: Partial<UserProfile> & { id: string } = { ...newProfileData, id: user.uid };
+
+      if (!profile) {
+        dataToSet.createdAt = Timestamp.now();
+      }
+
+      setDocumentNonBlocking(docRef, dataToSet, { merge: true });
     }
-  }, [user, firestore]);
+  }, [user, firestore, profile]);
 
   const addFoodLog = useCallback((food: Food, mealType: MealType, servings: number) => {
     if (user) {

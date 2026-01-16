@@ -14,6 +14,7 @@ export interface UserProfile {
   weight: number; // in kg
   activityLevel: ActivityLevel;
   goal: Goal;
+  createdAt: Timestamp;
 }
 
 export interface CalorieInfo {
