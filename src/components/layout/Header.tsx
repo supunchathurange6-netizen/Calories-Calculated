@@ -49,7 +49,7 @@ export default function Header() {
       <PopoverContent className="w-80">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <h4 className="font-medium leading-none">සුබ {quote.timeOfDay}!</h4>
+            <h4 className="font-medium leading-none">Good {quote.timeOfDay.charAt(0).toUpperCase() + quote.timeOfDay.slice(1)}!</h4>
             <p className="text-sm text-muted-foreground">
               {quote.text}
             </p>
