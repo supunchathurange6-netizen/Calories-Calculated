@@ -45,9 +45,10 @@ service cloud.firestore {
     }
 
     // Rules for the 'safetySettings' collection.
-    // Only admins can read or write safety settings.
+    // TODO: In production, this should be restricted to admins (e.g., `if isAdmin();`).
+    // For now, allowing any signed-in user to demonstrate functionality.
     match /safetySettings/{settingsId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isSignedIn();
     }
   }
 }

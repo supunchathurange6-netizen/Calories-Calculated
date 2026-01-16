@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,7 +23,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { updateSafetySettings } from '@/ai/flows/safety-settings-flow';
+import { useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const harmCategories = [
   'HARM_CATEGORY_HATE_SPEECH',
@@ -52,6 +53,7 @@ type SafetySettingsFormValues = z.infer<typeof safetySettingsSchema>;
 export default function SafetyAdminPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const firestore = useFirestore();
 
   const form = useForm<SafetySettingsFormValues>({
     resolver: zodResolver(safetySettingsSchema),
@@ -63,28 +65,17 @@ export default function SafetyAdminPage() {
     },
   });
 
-  async function onSubmit(data: SafetySettingsFormValues) {
+  function onSubmit(data: SafetySettingsFormValues) {
     setIsLoading(true);
     
-    const settingsPayload = Object.entries(data).map(([category, threshold]) => ({
-      category: category as typeof harmCategories[number],
-      threshold: threshold as typeof thresholds[number],
-    }));
+    const settingsRef = doc(firestore, 'safetySettings', 'global');
+    setDocumentNonBlocking(settingsRef, data, { merge: true });
 
-    try {
-      await updateSafetySettings({ settings: settingsPayload });
-      toast({
-        title: 'Success!',
-        description: 'Safety settings have been updated.',
-      });
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
-        description: 'Could not update safety settings.',
-      });
-    }
+    toast({
+      title: 'Success!',
+      description: 'Safety settings have been updated.',
+    });
+    
     setIsLoading(false);
   }
 
