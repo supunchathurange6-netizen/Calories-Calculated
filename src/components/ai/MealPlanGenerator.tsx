@@ -90,7 +90,7 @@ export default function MealPlanGenerator() {
     <Card>
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
-            <Sparkles className="text-primary" /> AI Meal Plan Generator
+            <Sparkles className="text-primary" /> Meal Plan Generator
         </CardTitle>
         <CardDescription>
             Get a personalized, one-day meal plan from our AI nutritionist based on your goals.
