@@ -51,6 +51,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>;
   }
 
+  if (pathname.startsWith('/admin')) {
+    return (
+      <div className="flex flex-col min-h-svh bg-background">
+        <Header />
+        <main className="flex-1 p-4 md:p-6">{children}</main>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <Sidebar variant='inset' collapsible='icon'>
