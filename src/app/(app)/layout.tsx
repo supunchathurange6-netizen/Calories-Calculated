@@ -24,6 +24,7 @@ import {
 import Header from '@/components/layout/Header';
 import { AppContext } from '@/context/AppContext';
 import BottomNavBar from '@/components/layout/BottomNavBar';
+import { SheetTitle } from '@/components/ui/sheet';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -58,8 +59,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       { href: '/dashboard', label: 'Back to App', icon: ArrowLeft },
     ];
     return (
-      <SidebarProvider>
+      <SidebarProvider className="admin-light-theme">
         <Sidebar variant='inset' collapsible='icon'>
+           <SheetTitle className="sr-only">Admin Sidebar Menu</SheetTitle>
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2 justify-center">
               <Menu className="w-8 h-8 text-primary" />
@@ -74,6 +76,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       asChild
                       isActive={pathname === item.href}
                       tooltip={item.label}
+                      className="data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
                     >
                     <Link href={item.href}>
                       <item.icon />
@@ -96,6 +99,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <Sidebar variant='inset' collapsible='icon'>
+        <SheetTitle className="sr-only">Sidebar Menu</SheetTitle>
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2 justify-center">
             <UtensilsCrossed className="w-8 h-8 text-primary" />
