@@ -3,12 +3,13 @@ import React, { useContext } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  ArrowLeft,
   BarChart3,
   LayoutDashboard,
+  Shield,
   User as UserIcon,
   UtensilsCrossed,
   QrCode,
-  Footprints, // Added Footprints
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -52,11 +53,43 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (pathname.startsWith('/admin')) {
+    const adminNavItems = [
+      { href: '/admin', label: 'Dashboard', icon: BarChart3 },
+      { href: '/dashboard', label: 'Back to App', icon: ArrowLeft },
+    ];
     return (
-      <div className="flex flex-col min-h-svh bg-background">
-        <Header />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
-      </div>
+      <SidebarProvider>
+        <Sidebar variant='inset' collapsible='icon'>
+          <SidebarHeader>
+            <div className="flex items-center gap-2 p-2 justify-center">
+              <Shield className="w-8 h-8 text-primary" />
+              <h1 className="font-headline text-2xl font-semibold group-data-[collapsible=icon]:hidden">Admin</h1>
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              {adminNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                      asChild
+                      isActive={pathname === item.href}
+                      tooltip={item.label}
+                    >
+                    <Link href={item.href}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarContent>
+        </Sidebar>
+        <SidebarInset>
+          <Header />
+          <main className="flex-1 p-4 md:p-6">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
     );
   }
 

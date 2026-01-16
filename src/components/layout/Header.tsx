@@ -16,9 +16,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { SidebarTrigger } from '../ui/sidebar';
 
 
 const getPageTitle = (pathname: string) => {
+  if (pathname.startsWith('/admin')) {
+    return 'Admin';
+  }
   switch (pathname) {
     case '/dashboard':
       return 'Dashboard';
@@ -76,8 +80,13 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
-      <div className="md:hidden flex-1" />
-      <h1 className="text-lg font-semibold md:text-xl font-headline flex-1 text-center md:text-left">
+      <div className="flex flex-1 items-center justify-start">
+        <div className="md:hidden">
+          {pathname.startsWith('/admin') && <SidebarTrigger />}
+        </div>
+      </div>
+      
+      <h1 className="text-lg font-semibold md:text-xl font-headline text-center md:text-left">
         {getPageTitle(pathname)}
       </h1>
       <div className="flex items-center gap-4 flex-1 justify-end">
