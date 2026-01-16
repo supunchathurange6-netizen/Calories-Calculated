@@ -6,7 +6,7 @@ import {
   ArrowLeft,
   BarChart3,
   LayoutDashboard,
-  Shield,
+  Menu,
   User as UserIcon,
   UtensilsCrossed,
   QrCode,
@@ -62,7 +62,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar variant='inset' collapsible='icon'>
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2 justify-center">
-              <Shield className="w-8 h-8 text-primary" />
+              <Menu className="w-8 h-8 text-primary" />
               <h1 className="font-headline text-2xl font-semibold group-data-[collapsible=icon]:hidden">Admin</h1>
             </div>
           </SidebarHeader>
