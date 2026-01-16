@@ -24,7 +24,7 @@ service cloud.firestore {
       allow create, update, delete: if isOwner(userId);
       
       // Any signed-in user can read profiles for the admin dashboard.
-      // TODO: In production, this should be restricted to admins (e.g., `if isAdmin();`).
+      // In a production environment, you should restrict this to admins: `if isAdmin();`
       allow read: if isSignedIn(); // 'read' includes 'get' and 'list'
 
       // Rules for the 'foodEntries' subcollection.
@@ -47,10 +47,9 @@ service cloud.firestore {
     }
 
     // Rules for the 'safetySettings' collection.
-    // TODO: In production, this should be restricted to admins (e.g., `if isAdmin();`).
-    // For now, allowing any signed-in user to demonstrate functionality.
+    // Only users with an 'admin' custom claim can read or write safety settings.
     match /safetySettings/{settingsId} {
-      allow read, write: if isSignedIn();
+      allow read, write: if isAdmin();
     }
   }
 }
