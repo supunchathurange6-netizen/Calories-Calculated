@@ -64,8 +64,8 @@ export default function AdminLoginPage() {
       });
       router.push('/admin');
     } catch (error: any) {
-      // If sign-in fails, check if it's an invalid credential error.
-      // This could mean the user doesn't exist or the password is wrong.
+      // If sign-in fails, it could be because the user doesn't exist (first-time setup)
+      // or the password is wrong. Firebase uses 'auth/invalid-credential' for both.
       if (error.code === 'auth/invalid-credential') {
         try {
           // As a fallback for the first-time setup, try to create the admin user.
@@ -77,17 +77,26 @@ export default function AdminLoginPage() {
           // Successful creation also signs the user in, so we can redirect.
           router.push('/admin');
         } catch (creationError: any) {
-          // This will catch if createUser fails (e.g., password too weak)
-          // or if the user *does* exist but the password was wrong in the first attempt.
-          console.error('Admin login/creation error:', creationError);
-          toast({
-            variant: 'destructive',
-            title: 'Login Failed',
-            description: 'Invalid credentials. Please check your email and password.',
-          });
+          // If creating the user fails because the email is already in use,
+          // it confirms the user exists, so the original sign-in attempt failed due to a wrong password.
+          if (creationError.code === 'auth/email-already-in-use') {
+            toast({
+              variant: 'destructive',
+              title: 'Login Failed',
+              description: 'Invalid credentials. Please check your email and password.',
+            });
+          } else {
+            // Handle other potential creation errors (e.g., 'auth/weak-password').
+            console.error('Admin account creation error:', creationError);
+            toast({
+              variant: 'destructive',
+              title: 'Account Creation Failed',
+              description: creationError.message || 'Could not create the admin account.',
+            });
+          }
         }
       } else {
-        // Handle other unexpected auth errors
+        // Handle other unexpected sign-in errors
         console.error('Admin login error:', error);
         toast({
           variant: 'destructive',
