@@ -121,9 +121,11 @@ export default function Header() {
             </>
           )
         ) : (
-          <Button asChild>
-            <Link href="/profile">Get Started</Link>
-          </Button>
+          !pathname.startsWith('/admin') && (
+            <Button asChild>
+              <Link href="/profile">Get Started</Link>
+            </Button>
+          )
         )}
       </div>
     </header>
