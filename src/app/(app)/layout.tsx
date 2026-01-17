@@ -10,6 +10,7 @@ import {
   User as UserIcon,
   UtensilsCrossed,
   QrCode,
+  Users,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -70,6 +71,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith('/admin')) {
     const adminNavItems = [
       { href: '/admin', label: 'Dashboard', icon: BarChart3 },
+      { href: '/admin/users', label: 'Users', icon: Users },
       { href: '/dashboard', label: 'Back to App', icon: ArrowLeft },
     ];
     return (
