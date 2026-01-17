@@ -66,7 +66,7 @@ export default function ProfileForm() {
       title: profile ? 'Profile Updated!' : 'Profile Saved!',
       description: profile ? 'Your information has been successfully updated.' : "Your calorie and macro goals have been calculated.",
     });
-    router.push('/');
+    router.push('/dashboard');
   }
 
   return (
