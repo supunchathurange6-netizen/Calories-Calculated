@@ -1,5 +1,5 @@
 'use client';
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -11,6 +11,8 @@ import {
   UtensilsCrossed,
   QrCode,
   Users,
+  Sparkles,
+  LogOut,
 } from 'lucide-react';
 import {
   SidebarProvider,
@@ -21,15 +23,38 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import Header from '@/components/layout/Header';
 import { AppContext } from '@/context/AppContext';
 import BottomNavBar from '@/components/layout/BottomNavBar';
+import { getTodaysQuote } from '@/lib/get-motivational-quote';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { profile, isInitialized } = useContext(AppContext);
+  const { profile, isInitialized, signOut } = useContext(AppContext);
   const router = useRouter();
+  const [quote, setQuote] = useState({ timeOfDay: 'morning', text: '' });
+  const [isClient, setIsClient] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+  useEffect(() => {
+    // This ensures the code runs only on the client, avoiding SSR issues.
+    setIsClient(true);
+    setQuote(getTodaysQuote());
+  }, []);
 
   React.useEffect(() => {
     // This effect handles the admin theme for the sidebar
@@ -53,6 +78,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         router.replace('/profile');
     }
   }, [isInitialized, profile, pathname, router]);
+
+  const handleSignOut = () => {
+    signOut();
+    router.push('/');
+  };
+
+
+  const MotivationalPopover = () => (
+    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <span className="sr-only">Motivation</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <h4 className="font-medium leading-none">Good {quote.timeOfDay.charAt(0).toUpperCase() + quote.timeOfDay.slice(1)}!</h4>
+            <p className="text-sm text-muted-foreground">
+              {quote.text}
+            </p>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
   if (!isInitialized) {
     return <div className="flex items-center justify-center h-screen bg-background">
@@ -94,6 +146,37 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               ))}
             </SidebarMenu>
           </SidebarContent>
+          <SidebarFooter>
+            {profile && isClient && (
+              <div className="flex items-center justify-around border-t border-sidebar-border p-2 mt-auto">
+                <MotivationalPopover />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                      <Avatar className="h-9 w-9 border-2 border-primary">
+                        <AvatarImage src={`https://i.pravatar.cc/150?u=${profile?.name}`} />
+                        <AvatarFallback>
+                          {profile ? profile.name.charAt(0).toUpperCase() : <UserIcon />}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{profile.name}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+          </SidebarFooter>
         </Sidebar>
         <SidebarInset>
           <Header />
