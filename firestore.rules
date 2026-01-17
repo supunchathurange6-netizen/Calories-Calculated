@@ -23,9 +23,6 @@ service cloud.firestore {
       // A user can create or update their own profile document.
       allow create, update: if isOwner(userId);
       
-      // An admin or the owner can delete a user profile.
-      allow delete: if isOwner(userId) || isAdmin();
-      
       // Any signed-in user can read profiles for the admin dashboard.
       // In a production environment, you should restrict this to admins: `if isAdmin();`
       allow read: if isSignedIn(); // 'read' includes 'get' and 'list'
