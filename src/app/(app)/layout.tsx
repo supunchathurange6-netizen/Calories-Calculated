@@ -7,6 +7,7 @@ import {
   BarChart3,
   LayoutDashboard,
   Menu,
+  ShieldCheck,
   User as UserIcon,
   UtensilsCrossed,
   QrCode,
@@ -149,7 +150,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2 justify-center">
-              <Menu className="w-8 h-8 text-primary" />
+              <ShieldCheck className="w-8 h-8 text-primary" />
               <h1 className="font-headline text-2xl font-semibold">Admin</h1>
             </div>
           </SidebarHeader>
