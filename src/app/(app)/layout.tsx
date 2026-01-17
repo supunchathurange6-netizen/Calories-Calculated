@@ -54,14 +54,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isInitialized, profile, pathname, router]);
 
-
-  const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/scan', label: 'Scan', icon: QrCode },
-    { href: '/progress', label: 'Progress', icon: BarChart3 },
-    { href: '/profile', label: 'Profile', icon: UserIcon },
-  ];
-
   if (!isInitialized) {
     return <div className="flex items-center justify-center h-screen bg-background">
       <UtensilsCrossed className="h-12 w-12 animate-pulse text-primary"/>
@@ -76,11 +68,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     ];
     return (
       <SidebarProvider>
-        <Sidebar variant='inset' collapsible='icon'>
+        <Sidebar collapsible='offcanvas'>
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2 justify-center">
               <Menu className="w-8 h-8 text-primary" />
-              <h1 className="font-headline text-2xl font-semibold group-data-[collapsible=icon]:hidden">Admin</h1>
+              <h1 className="font-headline text-2xl font-semibold">Admin</h1>
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -112,38 +104,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar variant='inset' collapsible='icon'>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 p-2 justify-center">
-            <UtensilsCrossed className="w-8 h-8 text-primary" />
-            <h1 className="font-headline text-2xl font-semibold group-data-[collapsible=icon]:hidden">Ceylanta</h1>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.label}
-                  >
-                  <Link href={item.href}>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
+    <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6">{children}</main>
         <BottomNavBar />
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   );
 }

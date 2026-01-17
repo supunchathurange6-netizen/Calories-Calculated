@@ -81,12 +81,12 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
       <div className="flex flex-1 items-center justify-start">
-        <div className="md:hidden">
-          {pathname.startsWith('/admin') && <SidebarTrigger />}
-        </div>
+        {pathname.startsWith('/admin') && (
+            <SidebarTrigger />
+        )}
       </div>
       
-      <h1 className="text-lg font-semibold md:text-xl font-headline text-center md:text-left">
+      <h1 className="text-lg font-semibold md:text-xl font-headline text-center">
         {getPageTitle(pathname)}
       </h1>
       <div className="flex items-center gap-4 flex-1 justify-end">
