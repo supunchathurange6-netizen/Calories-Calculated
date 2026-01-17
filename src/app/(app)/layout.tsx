@@ -146,37 +146,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               ))}
             </SidebarMenu>
           </SidebarContent>
-          <SidebarFooter>
-            {profile && isClient && (
-              <div className="flex items-center justify-around border-t border-sidebar-border p-2 mt-auto">
-                <MotivationalPopover />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                      <Avatar className="h-9 w-9 border-2 border-primary">
-                        <AvatarImage src={`https://i.pravatar.cc/150?u=${profile?.name}`} />
-                        <AvatarFallback>
-                          {profile ? profile.name.charAt(0).toUpperCase() : <UserIcon />}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{profile.name}</p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
-          </SidebarFooter>
         </Sidebar>
         <SidebarInset>
           <Header />
