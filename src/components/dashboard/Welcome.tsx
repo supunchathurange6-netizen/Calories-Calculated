@@ -27,10 +27,10 @@ export default function Welcome() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-6 left-6 right-6 text-left">
             <h1 className="font-headline text-3xl md:text-5xl font-bold text-white shadow-md">
-              Ceylanta Calories
+              Healthy Calorie Planner
             </h1>
             <p className="text-white/90 mt-2 text-sm md:text-base max-w-lg">
-                Your personal guide to healthy eating with a Sri Lankan flavor.
+                Your personal guide to healthy eating.
             </p>
           </div>
         </div>

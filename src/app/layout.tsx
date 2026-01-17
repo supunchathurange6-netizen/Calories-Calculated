@@ -5,8 +5,8 @@ import { AppProvider } from '@/context/AppContext';
 import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
-  title: 'Ceylanta Calories',
-  description: 'Track your calories with a Sri Lankan touch.',
+  title: 'Healthy Calorie Planner',
+  description: 'Your personal guide to healthy eating.',
 };
 
 export default function RootLayout({

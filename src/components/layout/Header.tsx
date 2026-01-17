@@ -33,7 +33,7 @@ const getPageTitle = (pathname: string) => {
     case '/scan':
       return 'Scan QR Code';
     default:
-      return 'Ceylanta Calories';
+      return 'Healthy Calorie Planner';
   }
 };
 
