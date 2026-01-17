@@ -32,7 +32,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <h1 className="text-3xl font-headline flex items-center gap-2">
         <UsersIcon /> User Management
       </h1>

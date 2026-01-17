@@ -120,7 +120,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     ];
     return (
       <SidebarProvider>
-        <Sidebar collapsible='offcanvas'>
+        <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2 justify-center">
               <Menu className="w-8 h-8 text-primary" />
@@ -149,7 +149,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </Sidebar>
         <SidebarInset>
           <Header />
-          <main className="flex-1 p-4 md:p-6">{children}</main>
+          <main className="flex-1 p-2">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     );
