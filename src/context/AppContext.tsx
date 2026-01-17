@@ -9,10 +9,11 @@ import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@
 import { collection, doc, addDoc, query, where, orderBy, Timestamp, setDoc, getDocs, limit } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
-import { getAuth, signOut as firebaseSignOut } from 'firebase/auth';
+import { getAuth, signOut as firebaseSignOut, User } from 'firebase/auth';
 
 interface AppContextType {
   isInitialized: boolean;
+  user: User | null;
   profile: UserProfile | null;
   calorieInfo: CalorieInfo | null;
   loggedFoods: LoggedFood[];
@@ -30,6 +31,7 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType>({
   isInitialized: false,
+  user: null,
   profile: null,
   calorieInfo: null,
   loggedFoods: [],
@@ -50,10 +52,13 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  // Anonymous sign-in
+  // Anonymous sign-in for non-admin users
   useEffect(() => {
     if (!isUserLoading && !user) {
-      initiateAnonymousSignIn(getAuth());
+      const isAdminLogin = window.location.pathname.startsWith('/admin');
+      if (!isAdminLogin) {
+        initiateAnonymousSignIn(getAuth());
+      }
     }
   }, [isUserLoading, user]);
 
@@ -179,6 +184,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const value = {
     isInitialized,
+    user,
     profile: profile || null,
     calorieInfo,
     loggedFoods: loggedFoods || [],

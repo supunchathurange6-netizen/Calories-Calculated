@@ -44,11 +44,13 @@ import { Button } from '@/components/ui/button';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { profile, isInitialized, signOut } = useContext(AppContext);
+  const { profile, isInitialized, signOut, user } = useContext(AppContext);
   const router = useRouter();
   const [quote, setQuote] = useState({ timeOfDay: 'morning', text: '' });
   const [isClient, setIsClient] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const ADMIN_EMAIL = 'csupun205@gmail.com';
+
 
   useEffect(() => {
     // This ensures the code runs only on the client, avoiding SSR issues.
@@ -72,16 +74,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   React.useEffect(() => {
-    // Redirect to profile creation if initialization is complete, there is no profile,
-    // and the user is not on the profile or admin pages.
-    if (isInitialized && !profile && pathname !== '/profile' && !pathname.startsWith('/admin')) {
+    if (!isInitialized) return; // Wait until auth state is loaded
+
+    const isAdminPage = pathname.startsWith('/admin');
+
+    if (isAdminPage) {
+      if (!user || user.email !== ADMIN_EMAIL) {
+        if(user) {
+          // Sign out incorrect user before redirecting
+          signOut();
+        }
+        router.replace('/admin/login');
+      }
+    } else {
+      // Not an admin page, check for profile
+      if (!profile && pathname !== '/profile') {
         router.replace('/profile');
+      }
     }
-  }, [isInitialized, profile, pathname, router]);
+  }, [isInitialized, profile, user, pathname, router, signOut]);
 
   const handleSignOut = () => {
     signOut();
-    router.push('/');
+     if(pathname.startsWith('/admin')) {
+        router.push('/admin/login');
+    } else {
+        router.push('/');
+    }
   };
 
 
@@ -113,6 +132,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (pathname.startsWith('/admin')) {
+    if (!user || user.email !== ADMIN_EMAIL) {
+       // While redirecting, show a loader.
+       return <div className="flex items-center justify-center h-screen bg-background">
+         <UtensilsCrossed className="h-12 w-12 animate-pulse text-primary"/>
+       </div>;
+    }
+
     const adminNavItems = [
       { href: '/admin', label: 'Dashboard', icon: BarChart3 },
       { href: '/admin/users', label: 'Users', icon: Users },
@@ -146,6 +172,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               ))}
             </SidebarMenu>
           </SidebarContent>
+           <SidebarFooter className="mt-auto">
+              <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton onClick={handleSignOut}>
+                        <LogOut />
+                        <span>Log Out</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+          </SidebarFooter>
         </Sidebar>
         <SidebarInset>
           <Header />
