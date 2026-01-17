@@ -1,8 +1,8 @@
 'use client';
 
-import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { UserProfile } from '@/lib/types';
-import { collection, doc, deleteDoc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -39,22 +39,33 @@ export default function AdminUsersPage() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!firestore) return;
-    const userDocRef = doc(firestore, 'users', userId);
+    setUserToDelete(null); // Close dialog immediately
+
     try {
-      await deleteDoc(userDocRef);
+      const response = await fetch('/api/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: userId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete user.');
+      }
+
       toast({
         title: 'User Deleted',
-        description: 'The user profile has been successfully deleted.',
+        description: 'The user has been removed from Authentication and Firestore.',
       });
-    } catch (error) {
-      const permissionError = new FirestorePermissionError({
-        path: userDocRef.path,
-        operation: 'delete',
+      // useCollection will auto-update the list
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error Deleting User',
+        description: error.message || 'An unknown error occurred.',
       });
-      errorEmitter.emit('permission-error', permissionError);
     }
-    setUserToDelete(null);
   };
 
 
@@ -141,8 +152,8 @@ export default function AdminUsersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the user profile for{' '}
-              <span className="font-bold">{userToDelete?.name}</span>. Note that this only removes the user profile document, not their authentication record or related sub-collection data.
+              This action cannot be undone. This will permanently delete the user{' '}
+              <span className="font-bold">{userToDelete?.name}</span> from Firebase Authentication and will remove their Firestore profile data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -151,7 +162,7 @@ export default function AdminUsersPage() {
               className={buttonVariants({ variant: "destructive" })}
               onClick={() => userToDelete && handleDeleteUser(userToDelete.id)}
             >
-              Delete User Profile
+              Delete User
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
