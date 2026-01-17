@@ -86,7 +86,7 @@ export default function AdminPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><BarChart2 /> User Registration Growth</CardTitle>
         </CardHeader>
-        <CardContent className="pl-2">
+        <CardContent>
           {userStats.usersByMonth.length > 0 ? (
             <ChartContainer config={chartConfig} className="h-80 w-full">
               <BarChart accessibilityLayer data={userStats.usersByMonth}>

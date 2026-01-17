@@ -24,6 +24,7 @@ export default function AdminUsersPage() {
   const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
 
   const getInitials = (name: string) => {
+    if (!name) return '';
     const names = name.split(' ');
     if (names.length > 1) {
       return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
@@ -44,52 +45,51 @@ export default function AdminUsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Gender</TableHead>
-                <TableHead>Goal</TableHead>
-                <TableHead>Joined</TableHead>
+                <TableHead className="px-2">User</TableHead>
+                <TableHead className="px-2 w-[50px]">Age</TableHead>
+                <TableHead className="px-2">Gender</TableHead>
+                <TableHead className="px-2">Goal</TableHead>
+                <TableHead className="px-2">Joined</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell>
+                    <TableCell className="px-2 py-3">
                       <div className="flex items-center gap-3">
                         <Skeleton className="h-10 w-10 rounded-full" />
                         <div className="space-y-1">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-24" />
+                          <Skeleton className="h-4 w-24" />
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell className="px-2 py-3"><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell className="px-2 py-3"><Skeleton className="h-4 w-12" /></TableCell>
+                    <TableCell className="px-2 py-3"><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                    <TableCell className="px-2 py-3"><Skeleton className="h-4 w-20" /></TableCell>
                   </TableRow>
                 ))}
               {!isLoading && users?.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell>
+                  <TableCell className="px-2 py-3">
                     <div className="flex items-center gap-3">
                       <Avatar>
                         <AvatarImage src={`https://i.pravatar.cc/150?u=${user.name}`} />
                         <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium">{user.name}</div>
+                        <div className="font-medium break-words max-w-32">{user.name}</div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{user.age}</TableCell>
-                  <TableCell className="capitalize">{user.gender}</TableCell>
-                  <TableCell>
+                  <TableCell className="px-2 py-3">{user.age}</TableCell>
+                  <TableCell className="capitalize px-2 py-3">{user.gender}</TableCell>
+                  <TableCell className="px-2 py-3">
                     <Badge variant="outline" className="capitalize">{user.goal}</Badge>
                   </TableCell>
-                  <TableCell>
-                    {user.createdAt ? format(user.createdAt.toDate(), 'PPP') : 'N/A'}
+                  <TableCell className="px-2 py-3">
+                    {user.createdAt ? format(user.createdAt.toDate(), 'P') : 'N/A'}
                   </TableCell>
                 </TableRow>
               ))}
