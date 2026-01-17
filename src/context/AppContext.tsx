@@ -6,7 +6,7 @@ import { calculateCalorieInfo } from '@/lib/calculations';
 import type { UserProfile, CalorieInfo, Food, LoggedFood, MealType, WeightEntry } from '@/lib/types';
 import { format } from 'date-fns';
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import { collection, doc, addDoc, query, where, orderBy, Timestamp, setDoc } from 'firebase/firestore';
+import { collection, doc, addDoc, query, where, orderBy, Timestamp, setDoc, getDocs, limit } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { getAuth, signOut as firebaseSignOut } from 'firebase/auth';
@@ -25,6 +25,7 @@ interface AppContextType {
   addCustomFood: (food: Omit<Food, 'id' | 'isCustom'>) => Promise<Food>;
   addWeightEntry: (weight: number) => void;
   signOut: () => void;
+  checkIfNameExists: (name: string) => Promise<boolean>;
 }
 
 export const AppContext = createContext<AppContextType>({
@@ -41,6 +42,7 @@ export const AppContext = createContext<AppContextType>({
   addCustomFood: async () => ({} as Food),
   addWeightEntry: () => {},
   signOut: () => {},
+  checkIfNameExists: async () => false,
 });
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
@@ -79,6 +81,22 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const calorieInfo = useMemo(() => {
     return profile ? calculateCalorieInfo(profile) : null;
   }, [profile]);
+
+  const checkIfNameExists = useCallback(async (name: string): Promise<boolean> => {
+    if (!user || !firestore) {
+      return false; 
+    }
+    const usersRef = collection(firestore, 'users');
+    const q = query(usersRef, where('name', '==', name), limit(1));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return false; // Name does not exist.
+    }
+    // Name exists, check if it belongs to a different user.
+    const foundDoc = querySnapshot.docs[0];
+    return foundDoc.id !== user.uid;
+  }, [user, firestore]);
 
   const setProfile = useCallback((newProfileData: Omit<UserProfile, 'id' | 'createdAt'>) => {
     if (user) {
@@ -173,6 +191,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     addCustomFood,
     addWeightEntry,
     signOut,
+    checkIfNameExists,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import type { ActivityLevel, Gender, Goal } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -25,9 +26,10 @@ const profileSchema = z.object({
 });
 
 export default function ProfileForm() {
-  const { profile, setProfile, addWeightEntry } = useContext(AppContext);
+  const { profile, setProfile, addWeightEntry, checkIfNameExists } = useContext(AppContext);
   const { toast } = useToast();
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -42,12 +44,27 @@ export default function ProfileForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof profileSchema>) {
+  async function onSubmit(values: z.infer<typeof profileSchema>) {
+    setIsSubmitting(true);
+
+    if (profile?.name !== values.name) {
+      const nameExists = await checkIfNameExists(values.name);
+      if (nameExists) {
+        toast({
+          variant: 'destructive',
+          title: 'Name already exists',
+          description: 'This name is already in use. Please choose a different one.',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     setProfile(values);
     addWeightEntry(values.weight);
     toast({
-      title: 'Profile Saved!',
-      description: "Your calorie and macro goals have been calculated.",
+      title: profile ? 'Profile Updated!' : 'Profile Saved!',
+      description: profile ? 'Your information has been successfully updated.' : "Your calorie and macro goals have been calculated.",
     });
     router.push('/');
   }
@@ -165,7 +182,16 @@ export default function ProfileForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" size="lg" className="w-full font-headline">{profile ? 'Update Profile' : 'Save Profile & Continue'}</Button>
+        <Button type="submit" size="lg" className="w-full font-headline" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            profile ? 'Update Profile' : 'Save Profile & Continue'
+          )}
+        </Button>
       </form>
     </Form>
   );
