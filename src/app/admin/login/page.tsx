@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -56,6 +56,7 @@ export default function AdminLoginPage() {
 
     setIsSubmitting(true);
     try {
+      // First, try to sign in.
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({
         title: 'Login Successful',
@@ -63,12 +64,37 @@ export default function AdminLoginPage() {
       });
       router.push('/admin');
     } catch (error: any) {
-      console.error('Admin login error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: 'Invalid credentials. Please try again.',
-      });
+      // If sign-in fails, check if it's an invalid credential error.
+      // This could mean the user doesn't exist or the password is wrong.
+      if (error.code === 'auth/invalid-credential') {
+        try {
+          // As a fallback for the first-time setup, try to create the admin user.
+          await createUserWithEmailAndPassword(auth, values.email, values.password);
+          toast({
+            title: 'Admin Account Created',
+            description: 'First-time setup complete. Logging you in...',
+          });
+          // Successful creation also signs the user in, so we can redirect.
+          router.push('/admin');
+        } catch (creationError: any) {
+          // This will catch if createUser fails (e.g., password too weak)
+          // or if the user *does* exist but the password was wrong in the first attempt.
+          console.error('Admin login/creation error:', creationError);
+          toast({
+            variant: 'destructive',
+            title: 'Login Failed',
+            description: 'Invalid credentials. Please check your email and password.',
+          });
+        }
+      } else {
+        // Handle other unexpected auth errors
+        console.error('Admin login error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'An Error Occurred',
+          description: error.message || 'Could not sign in. Please try again later.',
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
