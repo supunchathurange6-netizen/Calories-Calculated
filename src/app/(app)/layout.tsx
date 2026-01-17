@@ -31,6 +31,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
+    // This effect handles the admin theme for the sidebar
+    if (pathname.startsWith('/admin')) {
+      document.body.classList.add('admin-sidebar-theme');
+    } else {
+      document.body.classList.remove('admin-sidebar-theme');
+    }
+
+    // Cleanup function to remove the class when the component unmounts
+    // or before the next time the effect runs.
+    return () => {
+      document.body.classList.remove('admin-sidebar-theme');
+    };
+  }, [pathname]);
+
+  React.useEffect(() => {
     // Redirect to profile creation if initialization is complete, there is no profile,
     // and the user is not on the profile or admin pages.
     if (isInitialized && !profile && pathname !== '/profile' && !pathname.startsWith('/admin')) {
@@ -58,16 +73,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       { href: '/dashboard', label: 'Back to App', icon: ArrowLeft },
     ];
     return (
-      <SidebarProvider style={{
-        '--sidebar-background': 'hsl(0 0% 100%)',
-        '--sidebar-foreground': 'hsl(215 28% 17%)',
-        '--sidebar-border': 'hsl(214.3 31.8% 91.4%)',
-        '--sidebar-accent': 'hsl(210 40% 96.1%)',
-        '--sidebar-accent-foreground': 'hsl(215 28% 17%)',
-        '--sidebar-primary': 'hsl(142.1 76.2% 36.3%)',
-        '--sidebar-primary-foreground': 'hsl(355.7 100% 97.3%)',
-        '--sidebar-ring': 'hsl(142.1 76.2% 36.3%)',
-      } as React.CSSProperties}>
+      <SidebarProvider>
         <Sidebar variant='inset' collapsible='icon'>
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2 justify-center">

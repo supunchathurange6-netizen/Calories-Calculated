@@ -77,6 +77,18 @@
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 142.1 76.2% 36.3%;
   }
+
+  /* Admin Sidebar Theme Override */
+  .admin-sidebar-theme {
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 28% 17%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 215 28% 17%;
+    --sidebar-primary: 142.1 76.2% 36.3%;
+    --sidebar-primary-foreground: 355.7 100% 97.3%;
+    --sidebar-ring: 142.1 76.2% 36.3%;
+  }
 }
 
 @layer base {
