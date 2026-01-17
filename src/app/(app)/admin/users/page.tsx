@@ -1,6 +1,6 @@
 'use client';
 
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { UserProfile } from '@/lib/types';
 import { collection, doc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,19 +40,19 @@ export default function AdminUsersPage() {
 
   const handleDeleteUser = async (userId: string) => {
     if (!firestore) return;
+    const userDocRef = doc(firestore, 'users', userId);
     try {
-      await deleteDoc(doc(firestore, 'users', userId));
+      await deleteDoc(userDocRef);
       toast({
         title: 'User Deleted',
         description: 'The user profile has been successfully deleted.',
       });
     } catch (error) {
-      console.error('Error deleting user:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete user. You may not have permission.',
+      const permissionError = new FirestorePermissionError({
+        path: userDocRef.path,
+        operation: 'delete',
       });
+      errorEmitter.emit('permission-error', permissionError);
     }
     setUserToDelete(null);
   };
