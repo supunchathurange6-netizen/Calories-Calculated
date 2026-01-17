@@ -80,7 +80,6 @@ export default function AdminUsersPage() {
                       </Avatar>
                       <div>
                         <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">{user.id}</div>
                       </div>
                     </div>
                   </TableCell>

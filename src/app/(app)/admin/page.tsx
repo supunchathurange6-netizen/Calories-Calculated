@@ -57,7 +57,7 @@ export default function AdminPage() {
     return (
         <div className="p-4 md:p-8 space-y-6">
             <h1 className="text-3xl font-headline">Admin Dashboard</h1>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1">
                 <Skeleton className="h-28" />
             </div>
             <Skeleton className="h-96" />
@@ -69,7 +69,7 @@ export default function AdminPage() {
     <div className="p-4 md:p-8 space-y-6">
       <h1 className="text-3xl font-headline">Admin Dashboard</h1>
       
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
