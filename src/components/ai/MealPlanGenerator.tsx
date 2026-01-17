@@ -58,7 +58,7 @@ export default function MealPlanGenerator() {
       console.error('Error generating meal plan:', error);
       toast({
         title: 'Error',
-        description: 'Failed to generate a meal plan. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to generate a meal plan. Please try again.',
         variant: 'destructive',
       });
     }

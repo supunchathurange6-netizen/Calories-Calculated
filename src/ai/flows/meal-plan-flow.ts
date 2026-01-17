@@ -36,6 +36,9 @@ export type GenerateMealPlanInput = z.infer<typeof GenerateMealPlanInputSchema>;
 
 
 export async function generateMealPlan(input: GenerateMealPlanInput): Promise<GenerateMealPlanOutput> {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured. Please add it to your environment variables.');
+    }
     return mealPlanFlow(input);
 }
 

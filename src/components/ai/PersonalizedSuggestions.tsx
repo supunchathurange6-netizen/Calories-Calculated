@@ -52,7 +52,7 @@ export default function PersonalizedSuggestions() {
       console.error('Error fetching suggestions:', error);
       toast({
         title: 'Error',
-        description: 'Failed to get suggestions. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to get suggestions. Please try again.',
         variant: 'destructive',
       });
     }
