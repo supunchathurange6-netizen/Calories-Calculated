@@ -58,7 +58,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       { href: '/dashboard', label: 'Back to App', icon: ArrowLeft },
     ];
     return (
-      <SidebarProvider className="admin-light-theme">
+      <SidebarProvider style={{
+        '--sidebar-background': 'hsl(0 0% 100%)',
+        '--sidebar-foreground': 'hsl(215 28% 17%)',
+        '--sidebar-border': 'hsl(214.3 31.8% 91.4%)',
+        '--sidebar-accent': 'hsl(210 40% 96.1%)',
+        '--sidebar-accent-foreground': 'hsl(215 28% 17%)',
+        '--sidebar-primary': 'hsl(142.1 76.2% 36.3%)',
+        '--sidebar-primary-foreground': 'hsl(355.7 100% 97.3%)',
+        '--sidebar-ring': 'hsl(142.1 76.2% 36.3%)',
+      } as React.CSSProperties}>
         <Sidebar variant='inset' collapsible='icon'>
           <SidebarHeader>
             <div className="flex items-center gap-2 p-2 justify-center">
