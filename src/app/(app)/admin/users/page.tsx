@@ -2,7 +2,7 @@
 
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { UserProfile } from '@/lib/types';
-import { collection } from 'firebase/firestore';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -16,12 +16,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users as UsersIcon } from 'lucide-react';
+import { Trash2, Users as UsersIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Button, buttonVariants } from '@/components/ui/button';
 
 export default function AdminUsersPage() {
   const firestore = useFirestore();
   const usersQuery = useMemoFirebase(() => collection(firestore, 'users'), [firestore]);
   const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
+  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  const { toast } = useToast();
 
   const getInitials = (name: string) => {
     if (!name) return '';
@@ -31,6 +37,26 @@ export default function AdminUsersPage() {
     }
     return name.substring(0, 2).toUpperCase();
   };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, 'users', userId));
+      toast({
+        title: 'User Deleted',
+        description: 'The user profile has been successfully deleted.',
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete user. You may not have permission.',
+      });
+    }
+    setUserToDelete(null);
+  };
+
 
   return (
     <div className="space-y-4">
@@ -50,6 +76,7 @@ export default function AdminUsersPage() {
                 <TableHead className="px-2">Gender</TableHead>
                 <TableHead className="px-2">Goal</TableHead>
                 <TableHead className="px-2">Joined</TableHead>
+                <TableHead className="px-2 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -68,6 +95,7 @@ export default function AdminUsersPage() {
                     <TableCell className="px-2 py-3"><Skeleton className="h-4 w-12" /></TableCell>
                     <TableCell className="px-2 py-3"><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
                     <TableCell className="px-2 py-3"><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell className="px-2 py-3 text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                   </TableRow>
                 ))}
               {!isLoading && users?.map((user) => (
@@ -91,6 +119,11 @@ export default function AdminUsersPage() {
                   <TableCell className="px-2 py-3">
                     {user.createdAt ? format(user.createdAt.toDate(), 'P') : 'N/A'}
                   </TableCell>
+                  <TableCell className="px-2 py-3 text-right">
+                    <Button variant="ghost" size="icon" onClick={() => setUserToDelete(user)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -102,6 +135,27 @@ export default function AdminUsersPage() {
           )}
         </CardContent>
       </Card>
+      
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user profile for{' '}
+              <span className="font-bold">{userToDelete?.name}</span>. Note that this only removes the user profile document, not their authentication record or related sub-collection data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={buttonVariants({ variant: "destructive" })}
+              onClick={() => userToDelete && handleDeleteUser(userToDelete.id)}
+            >
+              Delete User Profile
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
