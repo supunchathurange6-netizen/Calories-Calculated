@@ -5,11 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 import { calculateCalorieInfo } from '@/lib/calculations';
 import type { UserProfile, CalorieInfo, Food, LoggedFood, MealType, WeightEntry } from '@/lib/types';
 import { format } from 'date-fns';
-import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { collection, doc, addDoc, query, where, orderBy, Timestamp, setDoc, getDocs, limit } from 'firebase/firestore';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
-import { getAuth, signOut as firebaseSignOut, User } from 'firebase/auth';
+import { signOut as firebaseSignOut, User } from 'firebase/auth';
 
 interface AppContextType {
   isInitialized: boolean;
@@ -50,17 +50,18 @@ export const AppContext = createContext<AppContextType>({
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
   const { toast } = useToast();
 
   // Anonymous sign-in for non-admin users
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (!isUserLoading && !user && auth) {
       const isAdminLogin = window.location.pathname.startsWith('/admin');
       if (!isAdminLogin) {
-        initiateAnonymousSignIn(getAuth());
+        initiateAnonymousSignIn(auth);
       }
     }
-  }, [isUserLoading, user]);
+  }, [isUserLoading, user, auth]);
 
   // Data fetching hooks
   const profileRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
@@ -158,7 +159,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user, firestore]);
 
   const signOut = useCallback(() => {
-    const auth = getAuth();
+    if (!auth) return;
     firebaseSignOut(auth).catch((error) => {
         toast({
             variant: 'destructive',
@@ -166,7 +167,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
             description: error.message || 'There was a problem signing out.',
         });
     });
-  }, [toast]);
+  }, [toast, auth]);
 
   const dailyTotals = useMemo(() => {
     return (loggedFoods || []).reduce(
