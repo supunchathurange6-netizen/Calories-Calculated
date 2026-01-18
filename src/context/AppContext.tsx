@@ -65,7 +65,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Data fetching hooks
   const profileRef = useMemoFirebase(() => (user ? doc(firestore, 'users', user.uid) : null), [firestore, user]);
-  const { data: profile } = useDoc<UserProfile>(profileRef);
+  const { data: profile, isLoading: isProfileLoading } = useDoc<UserProfile>(profileRef);
 
   const customFoodsQuery = useMemoFirebase(() => (user ? collection(firestore, 'users', user.uid, 'customFoods') : null), [firestore, user]);
   const { data: customFoods } = useCollection<Food>(customFoodsQuery);
@@ -82,7 +82,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const loggedFoodsQuery = useMemoFirebase(() => (user ? query(collection(firestore, 'users', user.uid, 'foodEntries'), where('timestamp', '>=', todayStart)) : null), [firestore, user, todayStart]);
   const { data: loggedFoods } = useCollection<LoggedFood>(loggedFoodsQuery);
 
-  const isInitialized = !isUserLoading;
+  const isInitialized = useMemo(() => {
+    if (isUserLoading) return false;
+    if (user && isProfileLoading) return false;
+    return true;
+  }, [isUserLoading, user, isProfileLoading]);
 
   const calorieInfo = useMemo(() => {
     return profile ? calculateCalorieInfo(profile) : null;
